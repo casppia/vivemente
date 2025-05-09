@@ -10,9 +10,9 @@ export function DashboardPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       {/* Progress Overview */}
-      <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-2xl shadow-xl overflow-hidden">
+      <div className="bg-gradient-to-br from-[#1a1040] to-[#0f0926] rounded-2xl shadow-xl overflow-hidden">
         <div className="p-8">
-          <h1 className="text-3xl font-bold text-indigo-200 tracking-wide mb-6">
+          <h1 className="text-3xl font-bold text-[#a5a0ff] tracking-wide mb-6">
             YOUR SPANISH PROGRESS
           </h1>
 
@@ -22,19 +22,19 @@ export function DashboardPage() {
                 <h2 className="text-2xl font-bold text-white">
                   You're at B1 (45%)
                 </h2>
-                <span className="text-indigo-200">Next: B2 (55%)</span>
+                <span className="text-[#a5a0ff]">Next: B2 (55%)</span>
               </div>
 
-              <div className="relative h-6 bg-indigo-950/50 rounded-full overflow-hidden">
+              <div className="relative h-6 bg-[#120b33] rounded-full overflow-hidden">
                 <div 
-                  className="absolute left-0 top-0 h-full bg-indigo-400 rounded-full transition-all duration-500"
+                  className="absolute left-0 top-0 h-full bg-[#6c63ff] rounded-full transition-all duration-500"
                   style={{ width: '45%' }}
                 />
                 <div className="absolute inset-0 flex justify-between items-center px-2 text-sm font-medium">
                   {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level, i) => (
                     <span 
                       key={level}
-                      className={`${i < 3 ? 'text-indigo-900' : 'text-indigo-200'} z-10`}
+                      className={`${i < 3 ? 'text-[#1a1040]' : 'text-[#a5a0ff]'} z-10`}
                     >
                       {level}
                     </span>
@@ -44,7 +44,7 @@ export function DashboardPage() {
             </div>
 
             <div>
-              <h3 className="text-lg font-medium text-indigo-200 mb-4">
+              <h3 className="text-lg font-medium text-[#a5a0ff] mb-4">
                 To reach B2 (55%), you need:
               </h3>
               <ul className="space-y-4 text-white">
@@ -64,21 +64,21 @@ export function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl transition-colors">
+              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2d1f80] hover:bg-[#382599] text-white rounded-xl transition-colors">
                 <Book className="w-5 h-5" />
                 <span>Practice Vocabulary</span>
               </button>
-              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl transition-colors">
+              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2d1f80] hover:bg-[#382599] text-white rounded-xl transition-colors">
                 <BookOpen className="w-5 h-5" />
                 <span>Study Grammar</span>
               </button>
-              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl transition-colors">
+              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2d1f80] hover:bg-[#382599] text-white rounded-xl transition-colors">
                 <Headphones className="w-5 h-5" />
                 <span>Listening Practice</span>
               </button>
               <button 
                 onClick={() => setIsSpeakingModalOpen(true)}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl transition-colors"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2d1f80] hover:bg-[#382599] text-white rounded-xl transition-colors"
               >
                 <Mic className="w-5 h-5" />
                 <span>Speaking Practice</span>
@@ -99,8 +99,8 @@ export function DashboardPage() {
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-indigo-900/20 rounded-lg flex items-center justify-center">
-                <Book className="w-6 h-6 text-indigo-400" />
+              <div className="w-12 h-12 bg-[#1a1040]/20 rounded-lg flex items-center justify-center">
+                <Book className="w-6 h-6 text-[#6c63ff]" />
               </div>
               <div>
                 <p className="font-medium text-white">
@@ -163,7 +163,7 @@ export function DashboardPage() {
       {/* Correction System Button */}
       <button
         onClick={() => setIsCorrectionModalOpen(true)}
-        className="w-full px-6 py-4 bg-indigo-700 hover:bg-indigo-600 text-white font-medium rounded-xl transition-colors shadow-lg hover:shadow-xl"
+        className="w-full px-6 py-4 bg-[#2d1f80] hover:bg-[#382599] text-white font-medium rounded-xl transition-colors shadow-lg hover:shadow-xl"
       >
         Spanish Correction System
       </button>
