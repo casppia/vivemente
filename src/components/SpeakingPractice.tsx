@@ -34,6 +34,18 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
   const recorderRef = useRef<RecordRTC | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   // Reset all states and cleanup when modal closes
   const handleClose = useCallback(() => {
     // Stop recording if active
@@ -227,8 +239,12 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-gray-900 rounded-xl w-full max-w-lg mx-auto my-8 flex flex-col min-h-[200px] max-h-[85vh]">
+    <div className="fixed inset-0 flex items-center justify-center z-50" onClick={handleClose}>
+      <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+      <div 
+        className="relative bg-gray-900 rounded-xl w-full max-w-lg mx-auto my-8 flex flex-col min-h-[200px] max-h-[85vh] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
         {/* Fixed Header */}
         <div className="flex-shrink-0 sticky top-0 z-10 bg-gray-900 rounded-t-xl border-b border-gray-800 p-6">
           <div className="flex items-center justify-between">
