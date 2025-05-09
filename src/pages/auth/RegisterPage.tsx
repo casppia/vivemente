@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Github, Twitter } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Facebook } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import { LoginButton } from 'react-facebook';
 
 export function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -56,6 +58,30 @@ export function RegisterPage() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      console.log('Google signup success:', credentialResponse);
+      // Handle Google signup
+      // Send token to backend for verification and user creation
+    } catch (err) {
+      setError('Failed to sign up with Google');
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Failed to sign up with Google');
+  };
+
+  const handleFacebookSignup = async (response: any) => {
+    try {
+      console.log('Facebook signup success:', response);
+      // Handle Facebook signup
+      // Send token to backend for verification and user creation
+    } catch (err) {
+      setError('Failed to sign up with Facebook');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -66,6 +92,40 @@ export function RegisterPage() {
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Start your Spanish learning journey
           </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              useOneTap
+            />
+          </div>
+          
+          <LoginButton
+            appId="YOUR_FACEBOOK_APP_ID"
+            onSuccess={handleFacebookSignup}
+            onFail={(error) => {
+              console.log('Facebook signup failed:', error);
+              setError('Failed to sign up with Facebook');
+            }}
+            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <Facebook className="h-5 w-5 mr-2" />
+            Facebook
+          </LoginButton>
+        </div>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-gray-50 dark:bg-gray-900 text-gray-500">
+              Or sign up with email
+            </span>
+          </div>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -220,34 +280,6 @@ export function RegisterPage() {
           >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 dark:bg-gray-900 text-gray-500">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              <Github className="h-5 w-5" />
-              <span className="ml-2">GitHub</span>
-            </button>
-            <button
-              type="button"
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              <Twitter className="h-5 w-5" />
-              <span className="ml-2">Twitter</span>
-            </button>
-          </div>
 
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{' '}
