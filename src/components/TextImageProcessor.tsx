@@ -53,7 +53,7 @@ export function TextImageProcessor() {
       Return ONLY the extracted text, no other commentary.`;
 
       const response = await generateText(prompt, {
-        model: 'gpt-4-vision',
+        model: 'gpt-4-vision-preview',
         maxTokens: 1000,
         temperature: 0.3,
       });
