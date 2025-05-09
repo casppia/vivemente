@@ -231,11 +231,19 @@ export function SpanishCorrection({ isOpen, onClose }: SpeakingPracticeProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-gray-900 rounded-xl w-full max-w-lg mx-auto my-8 flex flex-col max-h-[90vh]">
         {/* Fixed Header */}
-        <div className="p-6 border-b border-gray-800">
-          <h2 className="text-2xl font-bold text-white">Spanish Correction</h2>
+        <div className="sticky top-0 z-10 bg-gray-900 rounded-t-xl border-b border-gray-800 p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">Spanish Correction</h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Content */}
@@ -341,7 +349,7 @@ export function SpanishCorrection({ isOpen, onClose }: SpeakingPracticeProps) {
         </div>
 
         {/* Fixed Footer */}
-        <div className="p-6 border-t border-gray-800">
+        <div className="sticky bottom-0 z-10 bg-gray-900 rounded-b-xl border-t border-gray-800 p-6">
           <button
             onClick={handleClose}
             className="w-full px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
