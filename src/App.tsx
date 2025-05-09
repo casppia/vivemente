@@ -1,5 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { LevelSelectionPage } from './pages/LevelSelectionPage';
 import { LevelTopicsPage } from './pages/LevelTopicsPage';
 import { TopicPage } from './pages/TopicPage';
@@ -16,8 +20,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Auth routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        {/* Protected routes */}
         <Route path="/" element={<Layout />}>
-          {/* Redirect root to dashboard */}
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="topics" element={<LevelSelectionPage />} />
@@ -29,7 +39,7 @@ export default function App() {
           <Route path="comparison" element={<ComparisonDrill />} />
           <Route path="podcast" element={<PodcastPage />} />
           <Route path="generate" element={<TextGeneratorPage />} />
-          {/* <Route path="favorites" element={<FavoritesPage />} /> */}
+          <Route path="favorites" element={<FavoritesPage />} />
           <Route path="callback" element={<PodcastPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
