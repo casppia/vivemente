@@ -25,16 +25,16 @@ export function DashboardPage() {
                 <span className="text-indigo-200">Next: B2 (55%)</span>
               </div>
 
-              <div className="relative h-3 bg-indigo-950/50 rounded-full overflow-hidden">
+              <div className="relative h-6 bg-indigo-950/50 rounded-full overflow-hidden">
                 <div 
                   className="absolute left-0 top-0 h-full bg-indigo-400 rounded-full transition-all duration-500"
                   style={{ width: '45%' }}
                 />
-                <div className="absolute inset-0 flex justify-between px-2 text-xs font-medium">
+                <div className="absolute inset-0 flex justify-between items-center px-2 text-sm font-medium">
                   {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level, i) => (
                     <span 
                       key={level}
-                      className={`${i < 3 ? 'text-indigo-900' : 'text-indigo-200'}`}
+                      className={`${i < 3 ? 'text-indigo-900' : 'text-indigo-200'} z-10`}
                     >
                       {level}
                     </span>
