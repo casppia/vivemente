@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TextGenerator } from '../components/TextGenerator';
 import { TextAnalysis } from '../components/TextAnalysis';
+import { TextImageProcessor } from '../components/TextImageProcessor';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { useLanguageStore } from '../store/useLanguageStore';
 
-type Tab = 'generator' | 'analyzer';
+type Tab = 'generator' | 'analyzer' | 'image';
 
 export function TextGeneratorPage() {
   const [activeTab, setActiveTab] = useState<Tab>('generator');
@@ -35,6 +36,16 @@ export function TextGeneratorPage() {
           >
             Text Analysis
           </button>
+          <button
+            onClick={() => setActiveTab('image')}
+            className={`pb-4 px-4 text-lg font-medium border-b-2 transition-colors ${
+              activeTab === 'image'
+                ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            Image to Text
+          </button>
         </div>
         <LanguageSelector />
       </div>
@@ -48,13 +59,21 @@ export function TextGeneratorPage() {
           >
             <TextGenerator />
           </motion.div>
-        ) : (
+        ) : activeTab === 'analyzer' ? (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
           >
             <TextAnalysis level="B1" showTranslation={showTranslation} />
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+          >
+            <TextImageProcessor />
           </motion.div>
         )}
       </div>
