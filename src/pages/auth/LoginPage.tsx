@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Github, Twitter } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Facebook } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import { LoginButton } from 'react-facebook';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -28,6 +30,30 @@ export function LoginPage() {
       setError('Invalid email or password');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      console.log('Google login success:', credentialResponse);
+      // Handle Google login success
+      // Send token to backend for verification and user creation/login
+    } catch (err) {
+      setError('Failed to login with Google');
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Failed to login with Google');
+  };
+
+  const handleFacebookLogin = async (response: any) => {
+    try {
+      console.log('Facebook login success:', response);
+      // Handle Facebook login success
+      // Send token to backend for verification and user creation/login
+    } catch (err) {
+      setError('Failed to login with Facebook');
     }
   };
 
@@ -151,20 +177,26 @@ export function LoginPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
+            <div className="w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+              />
+            </div>
+            
+            <LoginButton
+              appId="YOUR_FACEBOOK_APP_ID"
+              onSuccess={handleFacebookLogin}
+              onFail={(error) => {
+                console.log('Facebook login failed:', error);
+                setError('Failed to login with Facebook');
+              }}
               className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              <Github className="h-5 w-5" />
-              <span className="ml-2">GitHub</span>
-            </button>
-            <button
-              type="button"
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              <Twitter className="h-5 w-5" />
-              <span className="ml-2">Twitter</span>
-            </button>
+              <Facebook className="h-5 w-5 mr-2" />
+              Facebook
+            </LoginButton>
           </div>
 
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
