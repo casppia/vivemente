@@ -320,5 +320,3 @@ export function TextImageProcessor() {
     </div>
   );
 }
-
-export { TextImageProcessor }
