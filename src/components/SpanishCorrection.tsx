@@ -1,31 +1,80 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Volume2, Mic, StopCircle, RefreshCw, VolumeX, Play, Pause } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Mic, StopCircle, X, Loader2, Volume2 } from 'lucide-react';
 import RecordRTC from 'recordrtc';
-import { generateText } from '../utils/openai';
+import { generateText, transcribeAudio } from '../utils/openai';
 
-interface SpanishCorrectionProps {
+interface SpeakingPracticeProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface CorrectionResult {
-  correctedText: string;
-  explanation: string;
-  suggestions: string[];
+interface FeedbackResponse {
+  transcription: string;
+  feedback: {
+    pronunciation: string;
+    grammar: string;
+    suggestions: string[];
+  };
+  examples: Array<{
+    spanish: string;
+    english: string;
+    explanation: string;
+  }>;
 }
 
-export function SpanishCorrection({ isOpen, onClose }: SpanishCorrectionProps) {
-  const [inputText, setInputText] = useState('');
+export function SpanishCorrection({ isOpen, onClose }: SpeakingPracticeProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [correction, setCorrection] = useState<CorrectionResult | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [transcription, setTranscription] = useState('');
+  const [feedback, setFeedback] = useState<FeedbackResponse['feedback'] | null>(null);
+  const [examples, setExamples] = useState<FeedbackResponse['examples']>([]);
   const [error, setError] = useState<string | null>(null);
-
+  const [isPlaying, setIsPlaying] = useState<number | null>(null);
   const recorderRef = useRef<RecordRTC | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  // Reset all states and cleanup when modal closes
+  const handleClose = useCallback(() => {
+    // Stop recording if active
+    if (isRecording && recorderRef.current) {
+      recorderRef.current.stopRecording();
+    }
+
+    // Stop and cleanup media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+
+    // Reset recorder
+    if (recorderRef.current) {
+      recorderRef.current = null;
+    }
+
+    // Reset all states
+    setIsRecording(false);
+    setIsProcessing(false);
+    setTranscription('');
+    setFeedback(null);
+    setExamples([]);
+    setError(null);
+    setIsPlaying(null);
+
+    // Call parent onClose
+    onClose();
+  }, [isRecording, onClose]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (recorderRef.current) {
+        recorderRef.current = null;
+      }
+    };
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -44,11 +93,18 @@ export function SpanishCorrection({ isOpen, onClose }: SpanishCorrectionProps) {
 
       recorderRef.current.startRecording();
       setIsRecording(true);
+
+      // Auto-stop after 60 seconds
+      setTimeout(() => {
+        if (isRecording) {
+          stopRecording();
+        }
+      }, 60000);
     } catch (err) {
       setError('Could not access microphone. Please check permissions.');
       console.error('Microphone access error:', err);
     }
-  }, []);
+  }, [isRecording]);
 
   const stopRecording = useCallback(async () => {
     if (!recorderRef.current) return;
@@ -57,7 +113,7 @@ export function SpanishCorrection({ isOpen, onClose }: SpanishCorrectionProps) {
     setIsProcessing(true);
 
     try {
-      recorderRef.current.stopRecording(() => {
+      recorderRef.current.stopRecording(async () => {
         const blob = recorderRef.current?.getBlob();
         if (!blob) {
           throw new Error('No recording data available');
@@ -69,87 +125,68 @@ export function SpanishCorrection({ isOpen, onClose }: SpanishCorrectionProps) {
           mediaStreamRef.current = null;
         }
 
-        // Convert blob to text using Web Speech API
-        const reader = new FileReader();
-        reader.onload = async () => {
-          try {
-            const prompt = `Correct this Spanish text and provide feedback:
-            "${inputText}"
-            
-            Return response as JSON with this format:
-            {
-              "correctedText": "The corrected Spanish text",
-              "explanation": "Explanation of the corrections made",
-              "suggestions": [
-                "Improvement suggestion 1",
-                "Improvement suggestion 2"
-              ]
-            }`;
+        try {
+          // First, get the transcription from Whisper API
+          const transcribedText = await transcribeAudio(blob);
 
-            const response = await generateText(prompt, {
-              model: 'gpt-3.5-turbo',
-              maxTokens: 500,
-              temperature: 0.7,
-            });
-
-            const result = JSON.parse(response);
-            setCorrection(result);
-          } catch (err) {
-            setError('Failed to process text. Please try again.');
-            console.error('Processing error:', err);
-          } finally {
-            setIsProcessing(false);
+          // Then, get feedback on the transcribed text
+          const prompt = `Analyze this Spanish speech and provide feedback with example sentences:
+          "${transcribedText}"
+          
+          Return response as JSON with this format:
+          {
+            "transcription": "${transcribedText}",
+            "feedback": {
+              "pronunciation": "Detailed feedback about pronunciation and accent",
+              "grammar": "Analysis of grammar usage and corrections if needed",
+              "suggestions": ["Specific improvement suggestion 1", "Specific improvement suggestion 2"]
+            },
+            "examples": [
+              {
+                "spanish": "Example sentence showing correct usage",
+                "english": "English translation",
+                "explanation": "Why this is a good example"
+              },
+              {
+                "spanish": "Another example sentence",
+                "english": "English translation",
+                "explanation": "Explanation of the correct usage"
+              }
+            ]
           }
-        };
-        reader.readAsText(blob);
+
+          Requirements:
+          - Provide 2-3 example sentences that demonstrate correct usage
+          - Make examples relevant to any corrections needed
+          - Include clear explanations of why each example is helpful
+          - Keep examples at an intermediate level
+          - Use natural, everyday Mexican Spanish`;
+
+          const response = await generateText(prompt, {
+            model: 'gpt-3.5-turbo',
+            maxTokens: 800,
+            temperature: 0.7,
+          });
+
+          const result = JSON.parse(response) as FeedbackResponse;
+          setTranscription(result.transcription);
+          setFeedback(result.feedback);
+          setExamples(result.examples);
+        } catch (err) {
+          setError('Failed to process speech. Please try again.');
+          console.error('Processing error:', err);
+        } finally {
+          setIsProcessing(false);
+        }
       });
     } catch (err) {
       setError('Failed to process recording. Please try again.');
       setIsProcessing(false);
       console.error('Recording error:', err);
     }
-  }, [inputText]);
+  }, []);
 
-  const handleTextSubmit = async () => {
-    if (!inputText.trim()) {
-      setError('Please enter some text to correct');
-      return;
-    }
-
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      const prompt = `Correct this Spanish text and provide feedback:
-      "${inputText}"
-      
-      Return response as JSON with this format:
-      {
-        "correctedText": "The corrected Spanish text",
-        "explanation": "Explanation of the corrections made",
-        "suggestions": [
-          "Improvement suggestion 1",
-          "Improvement suggestion 2"
-        ]
-      }`;
-
-      const response = await generateText(prompt, {
-        model: 'gpt-3.5-turbo',
-        maxTokens: 500,
-        temperature: 0.7,
-      });
-
-      const result = JSON.parse(response);
-      setCorrection(result);
-    } catch (err) {
-      setError('Failed to process text. Please try again.');
-      console.error('Processing error:', err);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const playAudio = useCallback((text: string, speed: number = 1) => {
+  const playAudio = useCallback((text: string, index: number) => {
     if (!window.speechSynthesis) {
       setError('Speech synthesis is not supported in your browser');
       return;
@@ -157,10 +194,11 @@ export function SpanishCorrection({ isOpen, onClose }: SpanishCorrectionProps) {
 
     // Stop any ongoing speech
     window.speechSynthesis.cancel();
+    setIsPlaying(null);
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-MX';
-    utterance.rate = speed;
+    utterance.rate = 0.9;
 
     // Get Spanish voice
     const voices = window.speechSynthesis.getVoices();
@@ -172,149 +210,144 @@ export function SpanishCorrection({ isOpen, onClose }: SpanishCorrectionProps) {
       utterance.voice = spanishVoice;
     }
 
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
+    utterance.onstart = () => setIsPlaying(index);
+    utterance.onend = () => setIsPlaying(null);
     utterance.onerror = () => {
-      setIsPlaying(false);
+      setIsPlaying(null);
       setError('Error playing audio');
     };
 
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  const stopAudio = useCallback(() => {
-    window.speechSynthesis.cancel();
-    setIsPlaying(false);
+  const resetStates = useCallback(() => {
+    setTranscription('');
+    setFeedback(null);
+    setExamples([]);
+    setError(null);
+    setIsPlaying(null);
   }, []);
-
-  const togglePlayback = useCallback(() => {
-    if (!correction) return;
-    
-    if (isPlaying) {
-      stopAudio();
-    } else {
-      playAudio(correction.correctedText, playbackSpeed);
-    }
-  }, [correction, isPlaying, playbackSpeed, playAudio, stopAudio]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-xl p-8 max-w-2xl w-full mx-4">
-        <h2 className="text-2xl font-bold text-white mb-6">Spanish Correction</h2>
+      <div className="bg-gray-900 rounded-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col">
+        {/* Fixed Header */}
+        <div className="p-6 border-b border-gray-800">
+          <h2 className="text-2xl font-bold text-white">Spanish Correction</h2>
+        </div>
 
-        <div className="space-y-6">
-          {/* Input Section */}
-          <div>
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Enter your Spanish text here..."
-              className="w-full h-32 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 resize-none"
-            />
-            <div className="flex gap-4 mt-4">
-              <button
-                onClick={handleTextSubmit}
-                disabled={isProcessing || !inputText.trim()}
-                className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors disabled:opacity-50"
-              >
-                {isProcessing ? (
-                  <>
-                    <RefreshCw className="inline-block w-4 h-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Check Text'
-                )}
-              </button>
-              <button
-                onClick={startRecording}
-                disabled={isRecording || isProcessing}
-                className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors disabled:opacity-50"
-              >
-                <Mic className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-6">
+            {!isRecording && !isProcessing && !transcription && (
+              <div className="text-center">
+                <button
+                  onClick={startRecording}
+                  className="p-6 bg-indigo-500 hover:bg-indigo-600 rounded-full text-white transition-colors"
+                >
+                  <Mic className="w-8 h-8" />
+                </button>
+                <p className="text-gray-400 mt-4">Click to start recording</p>
+              </div>
+            )}
 
-          {/* Recording Indicator */}
-          {isRecording && (
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-gray-400">Recording...</span>
-              <button
-                onClick={stopRecording}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-              >
-                <StopCircle className="w-5 h-5" />
-              </button>
-            </div>
-          )}
+            {isRecording && (
+              <div className="text-center">
+                <button
+                  onClick={stopRecording}
+                  className="p-6 bg-red-500 hover:bg-red-600 rounded-full text-white transition-colors animate-pulse"
+                >
+                  <StopCircle className="w-8 h-8" />
+                </button>
+                <p className="text-gray-400 mt-4">Recording... Click to stop</p>
+              </div>
+            )}
 
-          {/* Correction Results */}
-          {correction && (
-            <div className="space-y-6">
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-400">Corrected Text</h3>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={playbackSpeed}
-                      onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                      className="bg-gray-700 text-white text-sm rounded px-2 py-1"
-                    >
-                      <option value={0.5}>0.5x Speed</option>
-                      <option value={0.75}>0.75x Speed</option>
-                      <option value={1}>Normal Speed</option>
-                    </select>
-                    <button
-                      onClick={togglePlayback}
-                      className="p-2 text-gray-400 hover:text-white transition-colors"
-                    >
-                      {isPlaying ? (
-                        <Pause className="w-5 h-5" />
-                      ) : (
-                        <Play className="w-5 h-5" />
-                      )}
-                    </button>
+            {isProcessing && (
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
+                <p className="text-gray-400 mt-4">Processing your speech...</p>
+              </div>
+            )}
+
+            {transcription && feedback && (
+              <div className="space-y-4">
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Your Speech</h3>
+                  <p className="text-white">{transcription}</p>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">Pronunciation</h3>
+                    <p className="text-white">{feedback.pronunciation}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">Grammar</h3>
+                    <p className="text-white">{feedback.grammar}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">Suggestions</h3>
+                    <ul className="list-disc list-inside space-y-1">
+                      {feedback.suggestions.map((suggestion, index) => (
+                        <li key={index} className="text-white">{suggestion}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
-                <p className="text-white">{correction.correctedText}</p>
+
+                {examples.length > 0 && (
+                  <div className="bg-gray-800 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-gray-400 mb-4">Example Sentences</h3>
+                    <div className="space-y-4">
+                      {examples.map((example, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-white">{example.spanish}</p>
+                            <button
+                              onClick={() => playAudio(example.spanish, index)}
+                              className="p-2 text-gray-400 hover:text-white transition-colors"
+                            >
+                              <Volume2 className={`w-5 h-5 ${isPlaying === index ? 'text-indigo-400' : ''}`} />
+                            </button>
+                          </div>
+                          <p className="text-gray-400 text-sm">{example.english}</p>
+                          <p className="text-indigo-400 text-sm italic">{example.explanation}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={resetStates}
+                  className="w-full px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors"
+                >
+                  Try Again
+                </button>
               </div>
+            )}
 
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-400 mb-2">Explanation</h3>
-                <p className="text-white">{correction.explanation}</p>
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
+                {error}
               </div>
+            )}
+          </div>
+        </div>
 
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-400 mb-2">Suggestions</h3>
-                <ul className="space-y-2">
-                  {correction.suggestions.map((suggestion, index) => (
-                    <li key={index} className="text-white">• {suggestion}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <button
-                onClick={() => {
-                  setInputText('');
-                  setCorrection(null);
-                }}
-                className="w-full px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors"
-              >
-                Try Another
-              </button>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
-              {error}
-            </div>
-          )}
+        {/* Fixed Footer */}
+        <div className="p-6 border-t border-gray-800">
+          <button
+            onClick={handleClose}
+            className="w-full px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
