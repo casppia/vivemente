@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw, Clock } from 'lucide-react';
 import { VerbTense, PracticeSentence } from '../types/practice';
 import { generateText } from '../utils/openai';
 import { useWordStore } from '../store/useWordStore';
+import { usePracticeStore } from '../store/usePracticeStore';
 
 interface Props {
   level: string;
@@ -16,7 +18,19 @@ export function ConjugationPractice({ level, tense }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState<{ index: number; verb: string; subject: string } | null>(null);
-  const { addWord } = useWordStore();
+  const { addWord, savedWords } = useWordStore();
+  const { incrementPracticeCount, getPracticeStats } = usePracticeStore();
+  const stats = getPracticeStats(tense.name);
+
+  const formatDate = (timestamp?: number) => {
+    if (!timestamp) return 'Never';
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(timestamp);
+  };
 
   const generatePractice = async () => {
     setLoading(true);
@@ -87,6 +101,7 @@ export function ConjugationPractice({ level, tense }: Props) {
 
   const handleSubmit = () => {
     setShowResults(true);
+    incrementPracticeCount(tense.name);
   };
 
   const handleTryAgain = () => {
@@ -136,36 +151,28 @@ export function ConjugationPractice({ level, tense }: Props) {
     setShowSaveDialog(null);
   };
 
-  const renderSentence = (sentence: PracticeSentence, index: number) => {
-    const parts = sentence.spanish.split('_____');
-    return (
-      <>
-        {parts[0]}
-        <input
-          type="text"
-          value={userAnswers[index]}
-          onChange={(e) => handleAnswerChange(index, e.target.value)}
-          disabled={showResults}
-          className={`w-32 px-2 py-1 mx-1 rounded border ${
-            showResults
-              ? userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase()
-                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                : 'border-red-500 bg-red-50 dark:bg-red-900/20'
-              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-          }`}
-          placeholder={`(${sentence.verb.infinitive})`}
-        />
-        {parts[1]}
-      </>
-    );
-  };
-
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {tense.name}
-        </h3>
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {tense.name}
+          </h3>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <span className="font-medium">Practiced:</span>
+              <span className="bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded">
+                {stats.practiceCount} times
+              </span>
+            </div>
+            {stats.lastPracticed && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Clock className="w-4 h-4" />
+                <span>Last: {formatDate(stats.lastPracticed)}</span>
+              </div>
+            )}
+          </div>
+        </div>
         <button
           onClick={generatePractice}
           disabled={loading}
@@ -198,7 +205,22 @@ export function ConjugationPractice({ level, tense }: Props) {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <p className="text-gray-900 dark:text-white">
-                      {renderSentence(sentence, index)}
+                      {sentence.spanish.split('_____')[0]}
+                      <input
+                        type="text"
+                        value={userAnswers[index]}
+                        onChange={(e) => handleAnswerChange(index, e.target.value)}
+                        disabled={showResults}
+                        className={`w-32 px-2 py-1 mx-1 rounded border ${
+                          showResults
+                            ? userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase()
+                              ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                              : 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                        }`}
+                        placeholder={`(${sentence.verb.infinitive})`}
+                      />
+                      {sentence.spanish.split('_____')[1]}
                     </p>
                     <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                       {sentence.english}
