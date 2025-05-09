@@ -242,10 +242,10 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
     <div className="fixed inset-0 flex items-center justify-center z-50" onClick={handleClose}>
       <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
       <div 
-        className="relative bg-gray-900 rounded-xl w-full max-w-lg mx-4 my-8 flex flex-col max-h-[85vh] overflow-hidden"
+        className="relative bg-gray-900 rounded-xl w-full max-w-lg mx-4 flex flex-col h-[85vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        {/* Fixed Header */}
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-800">
           <h2 className="text-2xl font-bold text-white">Speaking Practice</h2>
           <button
@@ -256,7 +256,7 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
           </button>
         </div>
 
-        {/* Scrollable Content */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
             {!isRecording && !isProcessing && !transcription && (
@@ -351,7 +351,7 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
           </div>
         </div>
 
-        {/* Fixed Footer */}
+        {/* Footer */}
         <div className="p-6 border-t border-gray-800">
           {transcription && feedback ? (
             <button
