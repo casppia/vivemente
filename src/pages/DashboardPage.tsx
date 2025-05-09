@@ -64,21 +64,21 @@ export function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors">
+              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl transition-colors">
                 <Book className="w-5 h-5" />
                 <span>Practice Vocabulary</span>
               </button>
-              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors">
+              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl transition-colors">
                 <BookOpen className="w-5 h-5" />
                 <span>Study Grammar</span>
               </button>
-              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors">
+              <button className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl transition-colors">
                 <Headphones className="w-5 h-5" />
                 <span>Listening Practice</span>
               </button>
               <button 
                 onClick={() => setIsSpeakingModalOpen(true)}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl transition-colors"
               >
                 <Mic className="w-5 h-5" />
                 <span>Speaking Practice</span>
@@ -90,36 +90,36 @@ export function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+        <div className="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-xl font-semibold text-white">
               Recent Activity
             </h3>
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center">
-                <Book className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              <div className="w-12 h-12 bg-indigo-900/20 rounded-lg flex items-center justify-center">
+                <Book className="w-6 h-6 text-indigo-400" />
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">
+                <p className="font-medium text-white">
                   Vocabulary Practice
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-400">
                   15 new words learned today
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <div className="w-12 h-12 bg-green-900/20 rounded-lg flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">
+                <p className="font-medium text-white">
                   Grammar Study
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-400">
                   Completed Present Perfect lesson
                 </p>
               </div>
@@ -127,23 +127,23 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+        <div className="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-xl font-semibold text-white">
               Study Streak
             </h3>
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center text-xl font-bold text-orange-600 dark:text-orange-400">
+              <div className="w-12 h-12 bg-orange-900/20 rounded-lg flex items-center justify-center text-xl font-bold text-orange-400">
                 7
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">
+                <p className="font-medium text-white">
                   Days in a Row
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-400">
                   Keep up the great work!
                 </p>
               </div>
@@ -163,7 +163,7 @@ export function DashboardPage() {
       {/* Correction System Button */}
       <button
         onClick={() => setIsCorrectionModalOpen(true)}
-        className="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white font-medium rounded-xl transition-colors shadow-lg hover:shadow-xl"
+        className="w-full px-6 py-4 bg-indigo-700 hover:bg-indigo-600 text-white font-medium rounded-xl transition-colors shadow-lg hover:shadow-xl"
       >
         Spanish Correction System
       </button>
