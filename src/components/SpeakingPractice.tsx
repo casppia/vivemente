@@ -242,25 +242,23 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
     <div className="fixed inset-0 flex items-center justify-center z-50" onClick={handleClose}>
       <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
       <div 
-        className="relative bg-gray-900 rounded-xl w-full max-w-lg mx-auto my-8 flex flex-col min-h-[200px] max-h-[85vh] overflow-hidden"
+        className="relative bg-gray-900 rounded-xl w-full max-w-lg mx-4 my-8 flex flex-col max-h-[85vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Fixed Header */}
-        <div className="flex-shrink-0 sticky top-0 z-10 bg-gray-900 rounded-t-xl border-b border-gray-800 p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">Speaking Practice</h2>
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
+        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+          <h2 className="text-2xl font-bold text-white">Speaking Practice</h2>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="space-y-6">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-6">
             {!isRecording && !isProcessing && !transcription && (
               <div className="text-center">
                 <button
@@ -354,7 +352,7 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
         </div>
 
         {/* Fixed Footer */}
-        <div className="flex-shrink-0 sticky bottom-0 z-10 bg-gray-900 rounded-b-xl border-t border-gray-800 p-6">
+        <div className="p-6 border-t border-gray-800">
           {transcription && feedback ? (
             <button
               onClick={resetStates}
