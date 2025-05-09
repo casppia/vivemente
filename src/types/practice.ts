@@ -18,6 +18,12 @@ export interface PracticeSentence {
   context: string;
 }
 
+export interface TensePracticeStats {
+  tenseName: string;
+  practiceCount: number;
+  lastPracticed?: number;
+}
+
 export const LEVEL_TENSES: Record<CEFRLevel, VerbTense[]> = {
   'A1': [
     {
