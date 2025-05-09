@@ -9,6 +9,9 @@ export function PracticePage() {
   const [selectedLevel, setSelectedLevel] = useState(CEFR_LEVELS[0].name);
   const [showTheory, setShowTheory] = useState(true);
 
+  // Get tenses applicable for the selected level
+  const applicableTenses = LEVEL_TENSES[selectedLevel];
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
@@ -48,12 +51,12 @@ export function PracticePage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <TenseTheory />
+          <TenseTheory level={selectedLevel} />
         </motion.div>
       )}
 
       <div className="space-y-6">
-        {LEVEL_TENSES[selectedLevel].map((tense) => (
+        {applicableTenses.map((tense) => (
           <ConjugationPractice
             key={tense.name}
             level={selectedLevel}

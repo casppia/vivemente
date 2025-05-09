@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { LEVEL_TENSES } from '../types/practice';
+import { CEFRLevel } from '../types/level';
 
 interface ConjugationTableProps {
   verbs: {
@@ -50,256 +52,78 @@ function ConjugationTable({ verbs }: ConjugationTableProps) {
 }
 
 interface TenseTheoryProps {
-  tense: string;
-  explanations: string[];
-  verbs: ConjugationTableProps['verbs'];
+  level: CEFRLevel;
 }
 
-function TenseSection({ tense, explanations, verbs }: TenseTheoryProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export default function TenseTheory({ level }: TenseTheoryProps) {
+  const [expandedTense, setExpandedTense] = useState<string | null>(null);
 
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {tense}
-        </h3>
-      </div>
+  // Get tenses applicable for the selected level
+  const applicableTenses = LEVEL_TENSES[level];
 
-      <AnimatePresence>
-        <motion.div
-          initial={{ height: 'auto' }}
-          animate={{ height: 'auto' }}
-          className="px-6 pb-6"
-        >
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  When to use:
-                </h4>
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                >
-                  {isExpanded ? 'Hide details' : 'Show details'}
-                  {isExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-              <ul className="space-y-2">
-                {explanations.map((explanation, index) => (
-                  <li key={index} className="text-gray-600 dark:text-gray-400 flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>{explanation}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <AnimatePresence>
-              {isExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Conjugation Examples:
-                    </h4>
-                    <ConjugationTable verbs={verbs} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
-
-export default function TenseTheory() {
   return (
     <div className="space-y-4">
-      <TenseSection
-        tense="Present Simple"
-        explanations={[
-          "Express habitual or repeated actions",
-          "State general truths or facts"
-        ]}
-        verbs={[
-          {
-            infinitive: "hablar",
-            conjugations: {
-              yo: "hablo",
-              tu: "hablas",
-              el: "habla",
-              nosotros: "hablamos",
-              vosotros: "habláis",
-              ellos: "hablan"
-            }
-          },
-          {
-            infinitive: "comer",
-            conjugations: {
-              yo: "como",
-              tu: "comes",
-              el: "come",
-              nosotros: "comemos",
-              vosotros: "coméis",
-              ellos: "comen"
-            }
-          },
-          {
-            infinitive: "vivir",
-            conjugations: {
-              yo: "vivo",
-              tu: "vives",
-              el: "vive",
-              nosotros: "vivimos",
-              vosotros: "vivís",
-              ellos: "viven"
-            }
-          }
-        ]}
-      />
+      {applicableTenses.map((tense) => (
+        <div key={tense.name} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {tense.name}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {tense.description}
+                </p>
+              </div>
+              <button
+                onClick={() => setExpandedTense(expandedTense === tense.name ? null : tense.name)}
+                className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                {expandedTense === tense.name ? 'Hide details' : 'Show details'}
+                {expandedTense === tense.name ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
 
-      <TenseSection
-        tense="Preterite"
-        explanations={[
-          "Express completed actions in the past",
-          "Describe specific events with a clear beginning and end"
-        ]}
-        verbs={[
-          {
-            infinitive: "hablar",
-            conjugations: {
-              yo: "hablé",
-              tu: "hablaste",
-              el: "habló",
-              nosotros: "hablamos",
-              vosotros: "hablasteis",
-              ellos: "hablaron"
-            }
-          },
-          {
-            infinitive: "comer",
-            conjugations: {
-              yo: "comí",
-              tu: "comiste",
-              el: "comió",
-              nosotros: "comimos",
-              vosotros: "comisteis",
-              ellos: "comieron"
-            }
-          },
-          {
-            infinitive: "vivir",
-            conjugations: {
-              yo: "viví",
-              tu: "viviste",
-              el: "vivió",
-              nosotros: "vivimos",
-              vosotros: "vivisteis",
-              ellos: "vivieron"
-            }
-          }
-        ]}
-      />
+          <AnimatePresence>
+            {expandedTense === tense.name && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="border-t border-gray-200 dark:border-gray-700"
+              >
+                <div className="px-6 pb-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        When to use:
+                      </h4>
+                      <ul className="space-y-2">
+                        {tense.description.split('. ').map((point, index) => (
+                          <li key={index} className="text-gray-600 dark:text-gray-400 flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-      <TenseSection
-        tense="Imperfect"
-        explanations={[
-          "Describe ongoing or repeated actions in the past",
-          "Set the scene or provide background information"
-        ]}
-        verbs={[
-          {
-            infinitive: "hablar",
-            conjugations: {
-              yo: "hablaba",
-              tu: "hablabas",
-              el: "hablaba",
-              nosotros: "hablábamos",
-              vosotros: "hablabais",
-              ellos: "hablaban"
-            }
-          },
-          {
-            infinitive: "comer",
-            conjugations: {
-              yo: "comía",
-              tu: "comías",
-              el: "comía",
-              nosotros: "comíamos",
-              vosotros: "comíais",
-              ellos: "comían"
-            }
-          },
-          {
-            infinitive: "vivir",
-            conjugations: {
-              yo: "vivía",
-              tu: "vivías",
-              el: "vivía",
-              nosotros: "vivíamos",
-              vosotros: "vivíais",
-              ellos: "vivían"
-            }
-          }
-        ]}
-      />
-
-      <TenseSection
-        tense="Present Perfect"
-        explanations={[
-          "Express actions completed in the recent past",
-          "Describe experiences that continue to be relevant"
-        ]}
-        verbs={[
-          {
-            infinitive: "hablar",
-            conjugations: {
-              yo: "he hablado",
-              tu: "has hablado",
-              el: "ha hablado",
-              nosotros: "hemos hablado",
-              vosotros: "habéis hablado",
-              ellos: "han hablado"
-            }
-          },
-          {
-            infinitive: "comer",
-            conjugations: {
-              yo: "he comido",
-              tu: "has comido",
-              el: "ha comido",
-              nosotros: "hemos comido",
-              vosotros: "habéis comido",
-              ellos: "han comido"
-            }
-          },
-          {
-            infinitive: "vivir",
-            conjugations: {
-              yo: "he vivido",
-              tu: "has vivido",
-              el: "ha vivido",
-              nosotros: "hemos vivido",
-              vosotros: "habéis vivido",
-              ellos: "han vivido"
-            }
-          }
-        ]}
-      />
+                    {/* Add conjugation examples here if needed */}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ))}
     </div>
   );
 }
 
-export { TenseTheory }
+export { TenseTheory };
