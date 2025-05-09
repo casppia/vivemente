@@ -159,10 +159,10 @@ export function ConjugationPractice({ level, tense }: Props) {
 
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Example with "{tense.example.infinitive}":
+                      Example with "{tense.example?.infinitive || ''}":
                     </h4>
                     <div className="grid grid-cols-2 gap-4">
-                      {Object.entries(tense.example.conjugation).map(([person, form]) => (
+                      {tense.example?.conjugation && Object.entries(tense.example.conjugation).map(([person, form]) => (
                         <div key={person} className="flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400 font-medium w-20">
                             {person}:
@@ -219,7 +219,7 @@ export function ConjugationPractice({ level, tense }: Props) {
                               : 'border-red-500 bg-red-50 dark:bg-red-900/20'
                             : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                         }`}
-                        placeholder={sentence.verb?.infinitive ? `(${sentence.verb.infinitive})` : ''}
+                        placeholder={sentence.verb && sentence.verb.infinitive ? `(${sentence.verb.infinitive})` : ''}
                       />
                       {sentence.spanish.split('_____')[1]}
                     </p>
@@ -234,7 +234,7 @@ export function ConjugationPractice({ level, tense }: Props) {
                           </p>
                         ) : (
                           <p className="text-red-600 dark:text-red-400 text-sm">
-                            The correct form is: <strong>{sentence.verb.correctForm}</strong> ({sentence.verb.subject})
+                            The correct form is: <strong>{sentence.verb.correctForm}</strong> {sentence.verb.subject && `(${sentence.verb.subject})`}
                           </p>
                         )}
                         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
