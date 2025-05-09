@@ -91,142 +91,185 @@ export function ConjugationPractice({ level, tense }: Props) {
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
             {tense.name}
           </h3>
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2"
-          >
-            {showDetails ? 'Hide details' : 'Show details'}
-            {showDetails ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {showDetails && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="mb-6"
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2"
             >
-              <div className="space-y-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    When to use:
-                  </h4>
-                  <ul className="space-y-2">
-                    {tense.description.split('. ').map((desc, index) => (
-                      <li key={index} className="text-gray-600 dark:text-gray-400 flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>{desc}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="flex justify-end">
-          <button
-            onClick={generatePractice}
-            disabled={loading}
-            className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
-              loading
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-            }`}
-          >
-            {loading ? (
-              <>
-                <RefreshCw className="inline-block w-4 h-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              'Practice'
-            )}
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {sentences.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mt-6 space-y-6"
-            >
-              {sentences.map((sentence, index) => (
-                <div key={index} className="space-y-2">
-                  <p className="text-gray-900 dark:text-white">
-                    {sentence.spanish.split('_____')[0]}
-                    <input
-                      type="text"
-                      value={userAnswers[index]}
-                      onChange={(e) => handleAnswerChange(index, e.target.value)}
-                      disabled={showResults}
-                      className={`w-32 px-2 py-1 mx-1 rounded border ${
-                        showResults
-                          ? userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase()
-                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                            : 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                      }`}
-                      placeholder={`(${sentence.verb.infinitive})`}
-                    />
-                    {sentence.spanish.split('_____')[1]}
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    {sentence.english}
-                  </p>
-                  {showResults && (
-                    <div className="mt-1">
-                      {userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase() ? (
-                        <p className="text-green-600 dark:text-green-400 text-sm">
-                          ¡Correcto! ✓
-                        </p>
-                      ) : (
-                        <p className="text-red-600 dark:text-red-400 text-sm">
-                          The correct form is: <strong>{sentence.verb.correctForm}</strong> ({sentence.verb.subject})
-                        </p>
-                      )}
-                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                        {sentence.context}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {!showResults ? (
-                <button
-                  onClick={handleSubmit}
-                  className="w-full mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  Check Answers
-                </button>
+              {showDetails ? 'Hide details' : 'Show details'}
+              {showDetails ? (
+                <ChevronUp className="w-4 h-4" />
               ) : (
-                <button
-                  onClick={handleTryAgain}
-                  className="w-full mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  Try New Sentences
-                </button>
+                <ChevronDown className="w-4 h-4" />
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {error && (
-          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            </button>
+            <button
+              onClick={generatePractice}
+              disabled={loading}
+              className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
+                loading
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              }`}
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="inline-block w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                'Practice'
+              )}
+            </button>
           </div>
-        )}
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              When to use:
+            </h4>
+            <ul className="space-y-2">
+              {tense.description.split('. ').map((desc, index) => (
+                <li key={index} className="text-gray-600 dark:text-gray-400 flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>{desc}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <AnimatePresence>
+            {showDetails && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="space-y-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Formation:
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {tense.formation}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Example with "{tense.example.infinitive}":
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.entries(tense.example.conjugation).map(([person, form]) => (
+                        <div key={person} className="flex items-center gap-2">
+                          <span className="text-gray-500 dark:text-gray-400 font-medium w-20">
+                            {person}:
+                          </span>
+                          <span className="text-indigo-600 dark:text-indigo-400">
+                            {form}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Time Markers:
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {tense.timeMarkers.map((marker, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-sm"
+                        >
+                          {marker}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {sentences.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                {sentences.map((sentence, index) => (
+                  <div key={index} className="space-y-2">
+                    <p className="text-gray-900 dark:text-white">
+                      {sentence.spanish.split('_____')[0]}
+                      <input
+                        type="text"
+                        value={userAnswers[index]}
+                        onChange={(e) => handleAnswerChange(index, e.target.value)}
+                        disabled={showResults}
+                        className={`w-32 px-2 py-1 mx-1 rounded border ${
+                          showResults
+                            ? userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase()
+                              ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                              : 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                        }`}
+                        placeholder={`(${sentence.verb.infinitive})`}
+                      />
+                      {sentence.spanish.split('_____')[1]}
+                    </p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      {sentence.english}
+                    </p>
+                    {showResults && (
+                      <div className="mt-1">
+                        {userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase() ? (
+                          <p className="text-green-600 dark:text-green-400 text-sm">
+                            ¡Correcto! ✓
+                          </p>
+                        ) : (
+                          <p className="text-red-600 dark:text-red-400 text-sm">
+                            The correct form is: <strong>{sentence.verb.correctForm}</strong> ({sentence.verb.subject})
+                          </p>
+                        )}
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                          {sentence.context}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {!showResults ? (
+                  <button
+                    onClick={handleSubmit}
+                    className="w-full mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Check Answers
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleTryAgain}
+                    className="w-full mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Try New Sentences
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {error && (
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
