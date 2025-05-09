@@ -5,10 +5,9 @@ import { VerbTense, PracticeSentence } from '../types/practice';
 import { generateText } from '../utils/openai';
 import { useWordStore } from '../store/useWordStore';
 import { usePracticeStore } from '../store/usePracticeStore';
-import { CEFRLevel } from '../types/level';
 
 interface Props {
-  level: CEFRLevel;
+  level: string;
   tense: VerbTense;
 }
 
@@ -21,7 +20,7 @@ export function ConjugationPractice({ level, tense }: Props) {
   const [showSaveDialog, setShowSaveDialog] = useState<{ index: number; verb: string; subject: string } | null>(null);
   const { addWord, savedWords } = useWordStore();
   const { incrementPracticeCount, getPracticeStats } = usePracticeStore();
-  const stats = getPracticeStats(tense.name, level);
+  const stats = getPracticeStats(tense.name);
 
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return 'Never';
@@ -73,7 +72,7 @@ export function ConjugationPractice({ level, tense }: Props) {
       });
 
       // Parse and validate the response
-      const practiceData = JSON.parse(response);
+      const practiceData = JSON.parse(response) as PracticeSentence[];
       
       // Validate that each sentence has the required verb subject
       const validatedData = practiceData.map(sentence => {
@@ -102,7 +101,7 @@ export function ConjugationPractice({ level, tense }: Props) {
 
   const handleSubmit = () => {
     setShowResults(true);
-    incrementPracticeCount(tense.name, level);
+    incrementPracticeCount(tense.name);
   };
 
   const handleTryAgain = () => {
@@ -140,7 +139,7 @@ export function ConjugationPractice({ level, tense }: Props) {
     addWord({
       word: sentence.verb.correctForm,
       type: 'verb',
-      level,
+      level: level as any,
       conjugation: {
         infinitive: sentence.verb.infinitive,
         conjugatedForm: sentence.verb.correctForm,
