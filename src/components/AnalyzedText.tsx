@@ -5,6 +5,7 @@ import { SpanishAudioPlayer } from './SpanishAudioPlayer';
 import { WordTooltip } from './WordTooltip';
 import { WordInteractionModal } from './WordInteractionModal';
 import { CEFRLevel } from '../types/level';
+import { TextRecorder } from './TextRecorder';
 
 interface AnalyzedTextProps {
   text: string;
@@ -20,6 +21,11 @@ export function AnalyzedText({ text, words, level, translation, culturalNotes }:
     position: { x: number; y: number };
   } | null>(null);
   const [selectedWord, setSelectedWord] = useState<AnalyzedWord | null>(null);
+  const [feedback, setFeedback] = useState<{
+    pronunciation: string;
+    grammar: string;
+    suggestions: string[];
+  } | null>(null);
 
   const handleWordHover = (word: AnalyzedWord, event: React.MouseEvent) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -47,7 +53,6 @@ export function AnalyzedText({ text, words, level, translation, culturalNotes }:
     }
   };
 
-  // Split text into words while preserving punctuation and spaces
   const tokenize = (text: string) => {
     return text.match(/[\wáéíóúüñÁÉÍÓÚÜÑ]+|[.,!?;:¿¡]|\s+/g) || [];
   };
@@ -61,16 +66,15 @@ export function AnalyzedText({ text, words, level, translation, culturalNotes }:
           </h3>
           <div className="flex items-center gap-2">
             <SpanishAudioPlayer text={text} />
+            <TextRecorder text={text} onFeedback={setFeedback} />
           </div>
         </div>
         <p className="text-gray-900 dark:text-white leading-relaxed">
           {tokenize(text).map((token, index) => {
-            // Skip rendering spaces directly
             if (/^\s+$/.test(token)) {
               return ' ';
             }
 
-            // Handle punctuation
             if (/^[.,!?;:¿¡]$/.test(token)) {
               return <span key={index}>{token}</span>;
             }
@@ -91,6 +95,41 @@ export function AnalyzedText({ text, words, level, translation, culturalNotes }:
             );
           })}
         </p>
+
+        {feedback && (
+          <div className="mt-6 space-y-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Pronunciation
+              </h4>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {feedback.pronunciation}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Grammar
+              </h4>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {feedback.grammar}
+              </p>
+            </div>
+            {feedback.suggestions.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Suggestions
+                </h4>
+                <ul className="mt-1 space-y-1">
+                  {feedback.suggestions.map((suggestion, index) => (
+                    <li key={index} className="text-gray-600 dark:text-gray-400">
+                      • {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {translation && (
