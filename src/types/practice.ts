@@ -20,7 +20,6 @@ export interface PracticeSentence {
 
 export interface TensePracticeStats {
   tenseName: string;
-  level: CEFRLevel;
   practiceCount: number;
   lastPracticed?: number;
 }
