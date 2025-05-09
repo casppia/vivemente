@@ -1,4 +1,5 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Mic, StopCircle, X, Loader2, Volume2 } from 'lucide-react';
 import RecordRTC from 'recordrtc';
 import { generateText, transcribeAudio } from '../utils/openai';
@@ -146,11 +147,6 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
                 "spanish": "Example sentence showing correct usage",
                 "english": "English translation",
                 "explanation": "Why this is a good example"
-              },
-              {
-                "spanish": "Another example sentence",
-                "english": "English translation",
-                "explanation": "Explanation of the correct usage"
               }
             ]
           }
@@ -231,113 +227,132 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-xl p-8 max-w-lg w-full mx-4 relative">
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
-        >
-          <X className="w-6 h-6" />
-        </button>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-gray-900 rounded-xl w-full max-w-lg mx-auto my-8 flex flex-col min-h-[200px] max-h-[85vh]">
+        {/* Fixed Header */}
+        <div className="flex-shrink-0 sticky top-0 z-10 bg-gray-900 rounded-t-xl border-b border-gray-800 p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">Speaking Practice</h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
 
-        <h2 className="text-2xl font-bold text-white mb-6">Speaking Practice</h2>
-
-        <div className="space-y-6">
-          {!isRecording && !isProcessing && !transcription && (
-            <div className="text-center">
-              <button
-                onClick={startRecording}
-                className="p-6 bg-indigo-500 hover:bg-indigo-600 rounded-full text-white transition-colors"
-              >
-                <Mic className="w-8 h-8" />
-              </button>
-              <p className="text-gray-400 mt-4">Click to start recording</p>
-            </div>
-          )}
-
-          {isRecording && (
-            <div className="text-center">
-              <button
-                onClick={stopRecording}
-                className="p-6 bg-red-500 hover:bg-red-600 rounded-full text-white transition-colors animate-pulse"
-              >
-                <StopCircle className="w-8 h-8" />
-              </button>
-              <p className="text-gray-400 mt-4">Recording... Click to stop</p>
-            </div>
-          )}
-
-          {isProcessing && (
-            <div className="text-center">
-              <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
-              <p className="text-gray-400 mt-4">Processing your speech...</p>
-            </div>
-          )}
-
-          {transcription && feedback && (
-            <div className="space-y-4">
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-400 mb-2">Your Speech</h3>
-                <p className="text-white">{transcription}</p>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-6">
+            {!isRecording && !isProcessing && !transcription && (
+              <div className="text-center">
+                <button
+                  onClick={startRecording}
+                  className="p-6 bg-indigo-500 hover:bg-indigo-600 rounded-full text-white transition-colors"
+                >
+                  <Mic className="w-8 h-8" />
+                </button>
+                <p className="text-gray-400 mt-4">Click to start recording</p>
               </div>
+            )}
 
-              <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-2">Pronunciation</h3>
-                  <p className="text-white">{feedback.pronunciation}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-2">Grammar</h3>
-                  <p className="text-white">{feedback.grammar}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-2">Suggestions</h3>
-                  <ul className="list-disc list-inside space-y-1">
-                    {feedback.suggestions.map((suggestion, index) => (
-                      <li key={index} className="text-white">{suggestion}</li>
-                    ))}
-                  </ul>
-                </div>
+            {isRecording && (
+              <div className="text-center">
+                <button
+                  onClick={stopRecording}
+                  className="p-6 bg-red-500 hover:bg-red-600 rounded-full text-white transition-colors animate-pulse"
+                >
+                  <StopCircle className="w-8 h-8" />
+                </button>
+                <p className="text-gray-400 mt-4">Recording... Click to stop</p>
               </div>
+            )}
 
-              {examples.length > 0 && (
+            {isProcessing && (
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
+                <p className="text-gray-400 mt-4">Processing your speech...</p>
+              </div>
+            )}
+
+            {transcription && feedback && (
+              <div className="space-y-4">
                 <div className="bg-gray-800 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-gray-400 mb-4">Example Sentences</h3>
-                  <div className="space-y-4">
-                    {examples.map((example, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-white">{example.spanish}</p>
-                          <button
-                            onClick={() => playAudio(example.spanish, index)}
-                            className="p-2 text-gray-400 hover:text-white transition-colors"
-                          >
-                            <Volume2 className={`w-5 h-5 ${isPlaying === index ? 'text-indigo-400' : ''}`} />
-                          </button>
-                        </div>
-                        <p className="text-gray-400 text-sm">{example.english}</p>
-                        <p className="text-indigo-400 text-sm italic">{example.explanation}</p>
-                      </div>
-                    ))}
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Your Speech</h3>
+                  <p className="text-white">{transcription}</p>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">Pronunciation</h3>
+                    <p className="text-white">{feedback.pronunciation}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">Grammar</h3>
+                    <p className="text-white">{feedback.grammar}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">Suggestions</h3>
+                    <ul className="list-disc list-inside space-y-1">
+                      {feedback.suggestions.map((suggestion, index) => (
+                        <li key={index} className="text-white">{suggestion}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
-              )}
 
-              <button
-                onClick={resetStates}
-                className="w-full px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
+                {examples.length > 0 && (
+                  <div className="bg-gray-800 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-gray-400 mb-4">Example Sentences</h3>
+                    <div className="space-y-4">
+                      {examples.map((example, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-white">{example.spanish}</p>
+                            <button
+                              onClick={() => playAudio(example.spanish, index)}
+                              className="p-2 text-gray-400 hover:text-white transition-colors"
+                            >
+                              <Volume2 className={`w-5 h-5 ${isPlaying === index ? 'text-indigo-400' : ''}`} />
+                            </button>
+                          </div>
+                          <p className="text-gray-400 text-sm">{example.english}</p>
+                          <p className="text-indigo-400 text-sm italic">{example.explanation}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
-              {error}
-            </div>
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
+                {error}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Fixed Footer */}
+        <div className="flex-shrink-0 sticky bottom-0 z-10 bg-gray-900 rounded-b-xl border-t border-gray-800 p-6">
+          {transcription && feedback ? (
+            <button
+              onClick={resetStates}
+              className="w-full px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors"
+            >
+              Try Again
+            </button>
+          ) : (
+            <button
+              onClick={handleClose}
+              className="w-full px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            >
+              Close
+            </button>
           )}
         </div>
       </div>
