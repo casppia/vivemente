@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Clock } from 'lucide-react';
 import { VerbTense, PracticeSentence } from '../types/practice';
 import { generateText } from '../utils/openai';
