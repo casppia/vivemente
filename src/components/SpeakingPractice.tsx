@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, StopCircle, X, Loader2, Volume2 } from 'lucide-react';
 import RecordRTC from 'recordrtc';
