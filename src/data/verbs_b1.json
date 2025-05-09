@@ -1,0 +1,597 @@
+{
+  "verbs": [
+    {
+      "id": 1,
+      "verb": "Abatir",
+      "meaning": "to defeat"
+    },
+    {
+      "id": 2,
+      "verb": "Abogar",
+      "meaning": "to advocate"
+    },
+    {
+      "id": 3,
+      "verb": "Abolir",
+      "meaning": "to abolish"
+    },
+    {
+      "id": 4,
+      "verb": "Abrazar",
+      "meaning": "to hug"
+    },
+    {
+      "id": 5,
+      "verb": "Abrumar",
+      "meaning": "to overwhelm"
+    },
+    {
+      "id": 6,
+      "verb": "Absorber",
+      "meaning": "to absorb"
+    },
+    {
+      "id": 7,
+      "verb": "Acariciar",
+      "meaning": "to caress"
+    },
+    {
+      "id": 8,
+      "verb": "Acatar",
+      "meaning": "to obey"
+    },
+    {
+      "id": 9,
+      "verb": "Acelerar",
+      "meaning": "to accelerate"
+    },
+    {
+      "id": 10,
+      "verb": "Acertar",
+      "meaning": "to guess correctly"
+    },
+    {
+      "id": 11,
+      "verb": "Aclarar",
+      "meaning": "to clarify"
+    },
+    {
+      "id": 12,
+      "verb": "Acomodar",
+      "meaning": "to accommodate"
+    },
+    {
+      "id": 13,
+      "verb": "Aconsejar",
+      "meaning": "to advise"
+    },
+    {
+      "id": 14,
+      "verb": "Acostumbrar",
+      "meaning": "to accustom"
+    },
+    {
+      "id": 15,
+      "verb": "Acudir",
+      "meaning": "to attend"
+    },
+    {
+      "id": 16,
+      "verb": "Adaptar",
+      "meaning": "to adapt"
+    },
+    {
+      "id": 17,
+      "verb": "Adelantar",
+      "meaning": "to advance"
+    },
+    {
+      "id": 18,
+      "verb": "Adivinar",
+      "meaning": "to guess"
+    },
+    {
+      "id": 19,
+      "verb": "Adjuntar",
+      "meaning": "to attach"
+    },
+    {
+      "id": 20,
+      "verb": "Administrar",
+      "meaning": "to manage"
+    },
+    {
+      "id": 21,
+      "verb": "Admirar",
+      "meaning": "to admire"
+    },
+    {
+      "id": 22,
+      "verb": "Adoptar",
+      "meaning": "to adopt"
+    },
+    {
+      "id": 23,
+      "verb": "Advertir",
+      "meaning": "to warn"
+    },
+    {
+      "id": 24,
+      "verb": "Afectar",
+      "meaning": "to affect"
+    },
+    {
+      "id": 25,
+      "verb": "Afeitar",
+      "meaning": "to shave"
+    },
+    {
+      "id": 26,
+      "verb": "Afianzar",
+      "meaning": "to secure"
+    },
+    {
+      "id": 27,
+      "verb": "Afirmar",
+      "meaning": "to affirm"
+    },
+    {
+      "id": 28,
+      "verb": "Ahorrar",
+      "meaning": "to save"
+    },
+    {
+      "id": 29,
+      "verb": "Ajustar",
+      "meaning": "to adjust"
+    },
+    {
+      "id": 30,
+      "verb": "Alcanzar",
+      "meaning": "to reach"
+    },
+    {
+      "id": 31,
+      "verb": "Alejar",
+      "meaning": "to move away"
+    },
+    {
+      "id": 32,
+      "verb": "Aliviar",
+      "meaning": "to relieve"
+    },
+    {
+      "id": 33,
+      "verb": "Almacenar",
+      "meaning": "to store"
+    },
+    {
+      "id": 34,
+      "verb": "Alquilar",
+      "meaning": "to rent"
+    },
+    {
+      "id": 35,
+      "verb": "Alterar",
+      "meaning": "to alter"
+    },
+    {
+      "id": 36,
+      "verb": "Aludir",
+      "meaning": "to allude"
+    },
+    {
+      "id": 37,
+      "verb": "Amansar",
+      "meaning": "to tame"
+    },
+    {
+      "id": 38,
+      "verb": "Ambicionar",
+      "meaning": "to aspire"
+    },
+    {
+      "id": 39,
+      "verb": "Amenazar",
+      "meaning": "to threaten"
+    },
+    {
+      "id": 40,
+      "verb": "Aportar",
+      "meaning": "to contribute"
+    },
+    {
+      "id": 41,
+      "verb": "Apreciar",
+      "meaning": "to appreciate"
+    },
+    {
+      "id": 42,
+      "verb": "Aprovechar",
+      "meaning": "to take advantage"
+    },
+    {
+      "id": 43,
+      "verb": "Armar",
+      "meaning": "to assemble"
+    },
+    {
+      "id": 44,
+      "verb": "Arrancar",
+      "meaning": "to start up"
+    },
+    {
+      "id": 45,
+      "verb": "Arrastrar",
+      "meaning": "to drag"
+    },
+    {
+      "id": 46,
+      "verb": "Arreglar",
+      "meaning": "to fix"
+    },
+    {
+      "id": 47,
+      "verb": "Arriesgar",
+      "meaning": "to risk"
+    },
+    {
+      "id": 48,
+      "verb": "Arrojar",
+      "meaning": "to throw"
+    },
+    {
+      "id": 49,
+      "verb": "Ascender",
+      "meaning": "to ascend"
+    },
+    {
+      "id": 50,
+      "verb": "Asombrar",
+      "meaning": "to amaze"
+    },
+    {
+      "id": 51,
+      "verb": "Aspirar",
+      "meaning": "to aspire"
+    },
+    {
+      "id": 52,
+      "verb": "Asumir",
+      "meaning": "to assume"
+    },
+    {
+      "id": 53,
+      "verb": "Atraer",
+      "meaning": "to attract"
+    },
+    {
+      "id": 54,
+      "verb": "Atravesar",
+      "meaning": "to cross"
+    },
+    {
+      "id": 55,
+      "verb": "Atribuir",
+      "meaning": "to attribute"
+    },
+    {
+      "id": 56,
+      "verb": "Aumentar",
+      "meaning": "to increase"
+    },
+    {
+      "id": 57,
+      "verb": "Averiguar",
+      "meaning": "to find out"
+    },
+    {
+      "id": 58,
+      "verb": "Ayudar",
+      "meaning": "to help"
+    },
+    {
+      "id": 59,
+      "verb": "Batallar",
+      "meaning": "to struggle"
+    },
+    {
+      "id": 60,
+      "verb": "Bendecir",
+      "meaning": "to bless"
+    },
+    {
+      "id": 61,
+      "verb": "Beneficiar",
+      "meaning": "to benefit"
+    },
+    {
+      "id": 62,
+      "verb": "Brincar",
+      "meaning": "to jump"
+    },
+    {
+      "id": 63,
+      "verb": "Brindar",
+      "meaning": "to toast"
+    },
+    {
+      "id": 64,
+      "verb": "Bromear",
+      "meaning": "to joke"
+    },
+    {
+      "id": 65,
+      "verb": "Burlarse",
+      "meaning": "to mock"
+    },
+    {
+      "id": 66,
+      "verb": "Buscar",
+      "meaning": "to search"
+    },
+    {
+      "id": 67,
+      "verb": "Cabalgar",
+      "meaning": "to ride horseback"
+    },
+    {
+      "id": 68,
+      "verb": "Cachar",
+      "meaning": "to catch"
+    },
+    {
+      "id": 69,
+      "verb": "Cachetear",
+      "meaning": "to slap"
+    },
+    {
+      "id": 70,
+      "verb": "Calcular",
+      "meaning": "to calculate"
+    },
+    {
+      "id": 71,
+      "verb": "Calentar",
+      "meaning": "to heat"
+    },
+    {
+      "id": 72,
+      "verb": "Callar",
+      "meaning": "to silence"
+    },
+    {
+      "id": 73,
+      "verb": "Canalizar",
+      "meaning": "to channel"
+    },
+    {
+      "id": 74,
+      "verb": "Cancelar",
+      "meaning": "to cancel"
+    },
+    {
+      "id": 75,
+      "verb": "Capturar",
+      "meaning": "to capture"
+    },
+    {
+      "id": 76,
+      "verb": "Caracterizar",
+      "meaning": "to characterize"
+    },
+    {
+      "id": 77,
+      "verb": "Carecer",
+      "meaning": "to lack"
+    },
+    {
+      "id": 78,
+      "verb": "Cargar",
+      "meaning": "to load"
+    },
+    {
+      "id": 79,
+      "verb": "Castigar",
+      "meaning": "to punish"
+    },
+    {
+      "id": 80,
+      "verb": "Ceder",
+      "meaning": "to yield"
+    },
+    {
+      "id": 81,
+      "verb": "Celebrar",
+      "meaning": "to celebrate"
+    },
+    {
+      "id": 82,
+      "verb": "Censurar",
+      "meaning": "to censor"
+    },
+    {
+      "id": 83,
+      "verb": "Cepillar",
+      "meaning": "to brush"
+    },
+    {
+      "id": 84,
+      "verb": "Cerrar",
+      "meaning": "to close"
+    },
+    {
+      "id": 85,
+      "verb": "Certificar",
+      "meaning": "to certify"
+    },
+    {
+      "id": 86,
+      "verb": "Chasquear",
+      "meaning": "to snap"
+    },
+    {
+      "id": 87,
+      "verb": "Chiflar",
+      "meaning": "to whistle"
+    },
+    {
+      "id": 88,
+      "verb": "Chismear",
+      "meaning": "to gossip"
+    },
+    {
+      "id": 89,
+      "verb": "Chocar",
+      "meaning": "to crash"
+    },
+    {
+      "id": 90,
+      "verb": "Chupar",
+      "meaning": "to suck"
+    },
+    {
+      "id": 91,
+      "verb": "Circular",
+      "meaning": "to circulate"
+    },
+    {
+      "id": 92,
+      "verb": "Clasificar",
+      "meaning": "to classify"
+    },
+    {
+      "id": 93,
+      "verb": "Clavar",
+      "meaning": "to nail"
+    },
+    {
+      "id": 94,
+      "verb": "Cobrar",
+      "meaning": "to charge"
+    },
+    {
+      "id": 95,
+      "verb": "Coincidir",
+      "meaning": "to coincide"
+    },
+    {
+      "id": 96,
+      "verb": "Colaborar",
+      "meaning": "to collaborate"
+    },
+    {
+      "id": 97,
+      "verb": "Colgar",
+      "meaning": "to hang"
+    },
+    {
+      "id": 98,
+      "verb": "Colocar",
+      "meaning": "to place"
+    },
+    {
+      "id": 99,
+      "verb": "Combatir",
+      "meaning": "to combat"
+    },
+    {
+      "id": 100,
+      "verb": "Compensar",
+      "meaning": "to compensate"
+    },
+    {
+      "id": 101,
+      "verb": "Competir",
+      "meaning": "to compete"
+    },
+    {
+      "id": 102,
+      "verb": "Complacer",
+      "meaning": "to please"
+    },
+    {
+      "id": 103,
+      "verb": "Complicar",
+      "meaning": "to complicate"
+    },
+    {
+      "id": 104,
+      "verb": "Componer",
+      "meaning": "to compose"
+    },
+    {
+      "id": 105,
+      "verb": "Comprender",
+      "meaning": "to understand"
+    },
+    {
+      "id": 106,
+      "verb": "Comprometer",
+      "meaning": "to commit"
+    },
+    {
+      "id": 107,
+      "verb": "Comprobar",
+      "meaning": "to verify"
+    },
+    {
+      "id": 108,
+      "verb": "Concentrar",
+      "meaning": "to concentrate"
+    },
+    {
+      "id": 109,
+      "verb": "Conciliar",
+      "meaning": "to reconcile"
+    },
+    {
+      "id": 110,
+      "verb": "Concluir",
+      "meaning": "to conclude"
+    },
+    {
+      "id": 111,
+      "verb": "Condenar",
+      "meaning": "to condemn"
+    },
+    {
+      "id": 112,
+      "verb": "Conducir",
+      "meaning": "to drive"
+    },
+    {
+      "id": 113,
+      "verb": "Confesar",
+      "meaning": "to confess"
+    },
+    {
+      "id": 114,
+      "verb": "Confiar",
+      "meaning": "to trust"
+    },
+    {
+      "id": 115,
+      "verb": "Confirmar",
+      "meaning": "to confirm"
+    },
+    {
+      "id": 116,
+      "verb": "Congelar",
+      "meaning": "to freeze"
+    },
+    {
+      "id": 117,
+      "verb": "Conseguir",
+      "meaning": "to get"
+    },
+    {
+      "id": 118,
+      "verb": "Consentir",
+      "meaning": "to consent"
+    },
+    {
+      "id": 119,
+      "verb": "Conservar",
+      "meaning": "to
+    }
