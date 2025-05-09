@@ -214,19 +214,19 @@ export function ConjugationPractice({ level, tense }: Props) {
                         disabled={showResults}
                         className={`w-32 px-2 py-1 mx-1 rounded border ${
                           showResults
-                            ? userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase()
+                            ? userAnswers[index].toLowerCase() === sentence.verb?.correctForm?.toLowerCase()
                               ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                               : 'border-red-500 bg-red-50 dark:bg-red-900/20'
                             : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                         }`}
-                        placeholder={`(${sentence.verb.infinitive})`}
+                        placeholder={sentence.verb?.infinitive ? `(${sentence.verb.infinitive})` : ''}
                       />
                       {sentence.spanish.split('_____')[1]}
                     </p>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">
                       {sentence.english}
                     </p>
-                    {showResults && (
+                    {showResults && sentence.verb?.correctForm && (
                       <div className="mt-1">
                         {userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase() ? (
                           <p className="text-green-600 dark:text-green-400 text-sm">
