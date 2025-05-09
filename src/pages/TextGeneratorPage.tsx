@@ -14,13 +14,13 @@ export function TextGeneratorPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex items-center justify-between mb-6">
         <nav className="relative flex items-center">
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent"></div>
-          <div className="flex items-center gap-12">
+          <div className="flex items-center gap-8">
             <button
               onClick={() => setActiveTab('generator')}
-              className={`relative py-4 text-lg font-medium transition-colors ${
+              className={`relative py-2 text-sm font-medium transition-colors ${
                 activeTab === 'generator'
                   ? 'text-indigo-600 dark:text-indigo-400'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
@@ -37,7 +37,7 @@ export function TextGeneratorPage() {
             </button>
             <button
               onClick={() => setActiveTab('analyzer')}
-              className={`relative py-4 text-lg font-medium transition-colors ${
+              className={`relative py-2 text-sm font-medium transition-colors ${
                 activeTab === 'analyzer'
                   ? 'text-indigo-600 dark:text-indigo-400'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
@@ -54,7 +54,7 @@ export function TextGeneratorPage() {
             </button>
             <button
               onClick={() => setActiveTab('image')}
-              className={`relative py-4 text-lg font-medium transition-colors ${
+              className={`relative py-2 text-sm font-medium transition-colors ${
                 activeTab === 'image'
                   ? 'text-indigo-600 dark:text-indigo-400'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
