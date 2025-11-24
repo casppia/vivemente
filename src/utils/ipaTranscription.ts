@@ -8,11 +8,11 @@ const mexicanSpanishIPA: IPAMapping = {
   'i': 'i',
   'o': 'o',
   'u': 'u',
-  'á': 'ˈa',
-  'é': 'ˈe',
-  'í': 'ˈi',
-  'ó': 'ˈo',
-  'ú': 'ˈu',
+  'á': '·a',
+  'é': '·e',
+  'í': '·i',
+  'ó': '·o',
+  'ú': '·u',
   'b': 'b',
   'c': 'k',
   'd': 'd',
@@ -131,7 +131,7 @@ export function textToIPA(text: string): string {
           ipaStressPos = beforeStress.length + nextVowelInAfter;
           const beforeVowel = ipa.substring(0, ipaStressPos);
           const fromVowel = ipa.substring(ipaStressPos);
-          ipa = beforeVowel + 'ˈ' + fromVowel.replace(/ˈ/g, '');
+          ipa = beforeVowel + '·' + fromVowel.replace(/·/g, '');
         }
       }
     } else {
@@ -149,7 +149,7 @@ export function textToIPA(text: string): string {
 
         if (vowels[stressPosition]) {
           const vowelIndex = vowels[stressPosition].index!;
-          ipa = ipa.substring(0, vowelIndex) + 'ˈ' + ipa.substring(vowelIndex);
+          ipa = ipa.substring(0, vowelIndex) + '·' + ipa.substring(vowelIndex);
         }
       }
     }
