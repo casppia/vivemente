@@ -354,11 +354,20 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
                     onChange={(e) => setSettings(prev => ({ ...prev, elevenLabsVoiceId: e.target.value }))}
                     className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
                   >
-                    {getDefaultSpanishVoices().map(voice => (
-                      <option key={voice.voice_id} value={voice.voice_id}>
-                        {voice.name}
-                      </option>
-                    ))}
+                    <optgroup label="Female Voices">
+                      {getDefaultSpanishVoices().filter(v => v.category === 'female').map(voice => (
+                        <option key={voice.voice_id} value={voice.voice_id}>
+                          {voice.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Male Voices">
+                      {getDefaultSpanishVoices().filter(v => v.category === 'male').map(voice => (
+                        <option key={voice.voice_id} value={voice.voice_id}>
+                          {voice.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   </select>
                 </div>
               )}
