@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { generateText } from '../utils/openai';
 import { SpanishAudioPlayer } from './SpanishAudioPlayer';
+import { textToIPA } from '../utils/ipaTranscription';
 import topicWords from '../data/words_by_topic.json';
 
 // Helper function to get random words from topics
@@ -427,9 +428,14 @@ export function ComparisonDrill() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <p className="text-gray-900 dark:text-white font-medium">
-                            {pair.first.spanish}
-                          </p>
+                          <div className="flex-1">
+                            <p className="text-gray-900 dark:text-white font-medium">
+                              {pair.first.spanish}
+                            </p>
+                            <p className="text-indigo-600 dark:text-indigo-400 text-xs font-mono mt-1">
+                              {textToIPA(pair.first.spanish)}
+                            </p>
+                          </div>
                           <SpanishAudioPlayer text={pair.first.spanish} />
                         </div>
                         <p className="text-gray-600 dark:text-gray-400 text-sm">
@@ -439,9 +445,14 @@ export function ComparisonDrill() {
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <p className="text-gray-900 dark:text-white font-medium">
-                            {pair.second.spanish}
-                          </p>
+                          <div className="flex-1">
+                            <p className="text-gray-900 dark:text-white font-medium">
+                              {pair.second.spanish}
+                            </p>
+                            <p className="text-indigo-600 dark:text-indigo-400 text-xs font-mono mt-1">
+                              {textToIPA(pair.second.spanish)}
+                            </p>
+                          </div>
                           <SpanishAudioPlayer text={pair.second.spanish} />
                         </div>
                         <p className="text-gray-600 dark:text-gray-400 text-sm">
@@ -471,47 +482,52 @@ export function ComparisonDrill() {
                     className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
                   >
                     <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        <p className="text-gray-900 dark:text-white">
-                          {sentence.spanish.split('_____')[0]}
-                          {sentence.options ? (
-                            <select
-                              value={topic.userAnswers[index]}
-                              onChange={(e) => handleAnswerChange(topic.id, index, e.target.value)}
-                              disabled={topic.showResults}
-                              className={`mx-1 px-2 py-1 rounded border ${
-                                topic.showResults
-                                  ? topic.userAnswers[index].toLowerCase() === sentence.correctAnswer.toLowerCase()
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                              }`}
-                            >
-                              <option value="">Select...</option>
-                              {sentence.options.map((option) => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <input
-                              type="text"
-                              value={topic.userAnswers[index]}
-                              onChange={(e) => handleAnswerChange(topic.id, index, e.target.value)}
-                              disabled={topic.showResults}
-                              className={`w-24 px-2 py-1 mx-1 rounded border ${
-                                topic.showResults
-                                  ? topic.userAnswers[index].toLowerCase() === sentence.correctAnswer.toLowerCase()
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                              }`}
-                            />
-                          )}
-                          {sentence.spanish.split('_____')[1]}
+                      <div>
+                        <div className="flex items-center gap-4">
+                          <p className="text-gray-900 dark:text-white flex-1">
+                            {sentence.spanish.split('_____')[0]}
+                            {sentence.options ? (
+                              <select
+                                value={topic.userAnswers[index]}
+                                onChange={(e) => handleAnswerChange(topic.id, index, e.target.value)}
+                                disabled={topic.showResults}
+                                className={`mx-1 px-2 py-1 rounded border ${
+                                  topic.showResults
+                                    ? topic.userAnswers[index].toLowerCase() === sentence.correctAnswer.toLowerCase()
+                                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                      : 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                                }`}
+                              >
+                                <option value="">Select...</option>
+                                {sentence.options.map((option) => (
+                                  <option key={option} value={option}>
+                                    {option}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                value={topic.userAnswers[index]}
+                                onChange={(e) => handleAnswerChange(topic.id, index, e.target.value)}
+                                disabled={topic.showResults}
+                                className={`w-24 px-2 py-1 mx-1 rounded border ${
+                                  topic.showResults
+                                    ? topic.userAnswers[index].toLowerCase() === sentence.correctAnswer.toLowerCase()
+                                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                      : 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                                }`}
+                              />
+                            )}
+                            {sentence.spanish.split('_____')[1]}
+                          </p>
+                          <SpanishAudioPlayer text={sentence.spanish} />
+                        </div>
+                        <p className="text-indigo-600 dark:text-indigo-400 text-xs font-mono mt-1">
+                          {textToIPA(sentence.spanish.replace('_____', topic.userAnswers[index] || '...'))}
                         </p>
-                        <SpanishAudioPlayer text={sentence.spanish} />
                       </div>
 
                       <p className="text-gray-600 dark:text-gray-400">
