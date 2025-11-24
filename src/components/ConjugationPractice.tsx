@@ -237,9 +237,6 @@ export function ConjugationPractice({ level, tense }: Props) {
                     <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                       {sentence.english}
                     </p>
-                    <p className="text-indigo-600 dark:text-indigo-400 text-sm mt-1 font-mono">
-                      {sentence.ipa}
-                    </p>
                   </div>
                   {showResults && (
                     <button
@@ -253,9 +250,14 @@ export function ConjugationPractice({ level, tense }: Props) {
                 {showResults && (
                   <div className="mt-1">
                     {userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase() ? (
-                      <p className="text-green-600 dark:text-green-400 text-sm">
-                        ¡Correcto! ✓
-                      </p>
+                      <div>
+                        <p className="text-green-600 dark:text-green-400 text-sm">
+                          ¡Correcto! ✓
+                        </p>
+                        <p className="text-indigo-600 dark:text-indigo-400 text-sm mt-1 font-mono">
+                          IPA: {sentence.ipa}
+                        </p>
+                      </div>
                     ) : (
                       <p className="text-red-600 dark:text-red-400 text-sm">
                         The correct form is: <strong>{sentence.verb.correctForm}</strong> ({sentence.verb.subject})
