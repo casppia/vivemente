@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, Pause, Settings2, X } from 'lucide-react';
+import { generateSpeech, isElevenLabsAvailable, getDefaultSpanishVoices } from '../utils/elevenLabs';
 
 interface SpanishAudioPlayerProps {
   text: string;
@@ -12,6 +13,8 @@ interface SpeechSettings {
   pitch: number;
   volume: number;
   voiceURI: string;
+  useElevenLabs: boolean;
+  elevenLabsVoiceId: string;
 }
 
 const MAX_CHUNK_LENGTH = 200;
@@ -29,6 +32,7 @@ const audioManager = {
 
 class AudioPlayerInstance {
   private utterance: SpeechSynthesisUtterance | null = null;
+  private audioElement: HTMLAudioElement | null = null;
   private isPlaying = false;
   private onPlayStateChange: (isPlaying: boolean) => void;
 
@@ -36,14 +40,60 @@ class AudioPlayerInstance {
     this.onPlayStateChange = onPlayStateChange;
   }
 
-  play(text: string, voice: SpeechSynthesisVoice | null, settings: SpeechSettings) {
+  async play(text: string, voice: SpeechSynthesisVoice | null, settings: SpeechSettings) {
     if (this.isPlaying) {
       this.stop();
       return;
     }
 
     audioManager.setCurrentPlayer(this);
-    
+
+    // Try ElevenLabs first if enabled and available
+    if (settings.useElevenLabs && isElevenLabsAvailable()) {
+      try {
+        const audioBlob = await generateSpeech(text, settings.elevenLabsVoiceId);
+        if (audioBlob) {
+          this.playAudioBlob(audioBlob, settings.volume);
+          return;
+        }
+      } catch (error) {
+        console.error('ElevenLabs failed, falling back to Web Speech API:', error);
+      }
+    }
+
+    // Fallback to Web Speech API
+    this.playSpeechSynthesis(text, voice, settings);
+  }
+
+  private playAudioBlob(blob: Blob, volume: number) {
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+    this.audioElement = audio;
+    audio.volume = volume;
+
+    this.isPlaying = true;
+    this.onPlayStateChange(true);
+
+    audio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      this.isPlaying = false;
+      this.audioElement = null;
+      this.onPlayStateChange(false);
+      audioManager.setCurrentPlayer(null);
+    };
+
+    audio.onerror = () => {
+      URL.revokeObjectURL(audioUrl);
+      this.isPlaying = false;
+      this.audioElement = null;
+      this.onPlayStateChange(false);
+      audioManager.setCurrentPlayer(null);
+    };
+
+    audio.play();
+  }
+
+  private playSpeechSynthesis(text: string, voice: SpeechSynthesisVoice | null, settings: SpeechSettings) {
     const utterance = new SpeechSynthesisUtterance(text);
     this.utterance = utterance;
 
@@ -79,6 +129,14 @@ class AudioPlayerInstance {
   }
 
   stop() {
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement = null;
+      this.isPlaying = false;
+      this.onPlayStateChange(false);
+      audioManager.setCurrentPlayer(null);
+    }
+
     if (this.utterance) {
       window.speechSynthesis.cancel();
       this.isPlaying = false;
@@ -96,7 +154,9 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
     rate: 0.9,
     pitch: 1.0,
     volume: 1.0,
-    voiceURI: ''
+    voiceURI: '',
+    useElevenLabs: isElevenLabsAvailable(),
+    elevenLabsVoiceId: getDefaultSpanishVoices()[0]?.voice_id || ''
   });
   const [showSettings, setShowSettings] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -258,52 +318,91 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Voice
-                </label>
-                <select
-                  value={settings.voiceURI}
-                  onChange={(e) => setSettings(prev => ({ ...prev, voiceURI: e.target.value }))}
-                  className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
-                >
-                  {voices.map(voice => (
-                    <option key={voice.voiceURI} value={voice.voiceURI}>
-                      {voice.name} ({voice.lang})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {isElevenLabsAvailable() && (
+                <div>
+                  <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <input
+                      type="checkbox"
+                      checked={settings.useElevenLabs}
+                      onChange={(e) => setSettings(prev => ({ ...prev, useElevenLabs: e.target.checked }))}
+                      className="mr-2"
+                    />
+                    Use ElevenLabs (Premium Quality)
+                  </label>
+                </div>
+              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Speed: {settings.rate}x
-                </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="2"
-                  step="0.1"
-                  value={settings.rate}
-                  onChange={(e) => setSettings(prev => ({ ...prev, rate: parseFloat(e.target.value) }))}
-                  className="w-full"
-                />
-              </div>
+              {settings.useElevenLabs && isElevenLabsAvailable() && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    ElevenLabs Voice
+                  </label>
+                  <select
+                    value={settings.elevenLabsVoiceId}
+                    onChange={(e) => setSettings(prev => ({ ...prev, elevenLabsVoiceId: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
+                  >
+                    {getDefaultSpanishVoices().map(voice => (
+                      <option key={voice.voice_id} value={voice.voice_id}>
+                        {voice.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Pitch: {settings.pitch}
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="2"
-                  step="0.1"
-                  value={settings.pitch}
-                  onChange={(e) => setSettings(prev => ({ ...prev, pitch: parseFloat(e.target.value) }))}
-                  className="w-full"
-                />
-              </div>
+              {(!settings.useElevenLabs || !isElevenLabsAvailable()) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Voice
+                  </label>
+                  <select
+                    value={settings.voiceURI}
+                    onChange={(e) => setSettings(prev => ({ ...prev, voiceURI: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
+                  >
+                    {voices.map(voice => (
+                      <option key={voice.voiceURI} value={voice.voiceURI}>
+                        {voice.name} ({voice.lang})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {(!settings.useElevenLabs || !isElevenLabsAvailable()) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Speed: {settings.rate}x
+                    </label>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="2"
+                      step="0.1"
+                      value={settings.rate}
+                      onChange={(e) => setSettings(prev => ({ ...prev, rate: parseFloat(e.target.value) }))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Pitch: {settings.pitch}
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="2"
+                      step="0.1"
+                      value={settings.pitch}
+                      onChange={(e) => setSettings(prev => ({ ...prev, pitch: parseFloat(e.target.value) }))}
+                      className="w-full"
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
