@@ -41,8 +41,11 @@ export async function generateSpeech(
   voiceId: string = SPANISH_VOICES[0].voice_id
 ): Promise<Blob | null> {
   if (!ELEVENLABS_API_KEY) {
+    console.log('ElevenLabs API key not found');
     return null;
   }
+
+  console.log('Generating ElevenLabs speech for:', text.substring(0, 50), 'with voice:', voiceId);
 
   try {
     const response = await fetch(
@@ -66,10 +69,14 @@ export async function generateSpeech(
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('ElevenLabs API error:', response.status, errorText);
       throw new Error(`ElevenLabs API error: ${response.statusText}`);
     }
 
-    return await response.blob();
+    const blob = await response.blob();
+    console.log('ElevenLabs audio generated successfully, size:', blob.size);
+    return blob;
   } catch (error) {
     console.error('Error generating speech with ElevenLabs:', error);
     return null;

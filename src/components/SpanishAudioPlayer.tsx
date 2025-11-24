@@ -50,15 +50,21 @@ class AudioPlayerInstance {
 
     // Try ElevenLabs first if enabled and available
     if (settings.useElevenLabs && isElevenLabsAvailable()) {
+      console.log('Attempting to use ElevenLabs audio...');
       try {
         const audioBlob = await generateSpeech(text, settings.elevenLabsVoiceId);
         if (audioBlob) {
+          console.log('Playing ElevenLabs audio');
           this.playAudioBlob(audioBlob, settings.volume);
           return;
+        } else {
+          console.log('ElevenLabs returned null, falling back to Web Speech API');
         }
       } catch (error) {
         console.error('ElevenLabs failed, falling back to Web Speech API:', error);
       }
+    } else {
+      console.log('Using Web Speech API (ElevenLabs not enabled or not available)');
     }
 
     // Fallback to Web Speech API
@@ -258,11 +264,17 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
 
     const selectedVoice = voices.find(v => v.voiceURI === settings.voiceURI) || voices[0];
 
+    // Clean the text: remove blanks, extra spaces, and placeholders
+    const cleanText = text
+      .replace(/_+/g, '') // Remove underscores
+      .replace(/\s+/g, ' ') // Normalize spaces
+      .trim();
+
     if (playerRef.current) {
       if (isPlaying) {
         playerRef.current.stop();
       } else {
-        playerRef.current.play(text, selectedVoice, settings);
+        playerRef.current.play(cleanText, selectedVoice, settings);
       }
     }
   }, [isVoicesLoaded, voices, settings, text, isPlaying]);
