@@ -8,10 +8,10 @@ export interface ElevenLabsVoice {
 }
 
 const SPANISH_VOICES = [
-  { voice_id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella - Female (Spanish)', category: 'female' },
-  { voice_id: 'ThT5KcBeYPX3keUQqHPh', name: 'Diego - Male (Spanish)', category: 'male' },
-  { voice_id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel - Male (British)', category: 'male' },
-  { voice_id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam - Male (American)', category: 'male' },
+  { voice_id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella - Female (Spain)', category: 'female' },
+  { voice_id: 'ThT5KcBeYPX3keUQqHPh', name: 'Diego - Male (Spain)', category: 'male' },
+  { voice_id: 'gD1IexrzCvsXPHUuT0s3', name: 'Sofía - Female (Mexico)', category: 'female' },
+  { voice_id: 'VR6AewLTigWG4xSOukaG', name: 'Mateo - Male (Mexico)', category: 'male' },
 ];
 
 export async function getElevenLabsVoices(): Promise<ElevenLabsVoice[]> {
