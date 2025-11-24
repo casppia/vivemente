@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Mic, StopCircle, RefreshCw } from 'lucide-react';
 import RecordRTC from 'recordrtc';
-import { transcribeAudio } from '../utils/openai';
+import { transcribeAudio, generateText } from '../utils/openai';
 
 interface TextRecorderProps {
   text: string;
