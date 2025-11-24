@@ -8,11 +8,11 @@ const mexicanSpanishIPA: IPAMapping = {
   'i': 'i',
   'o': 'o',
   'u': 'u',
-  'á': '·a',
-  'é': '·e',
-  'í': '·i',
-  'ó': '·o',
-  'ú': '·u',
+  'á': 'a',
+  'é': 'e',
+  'í': 'i',
+  'ó': 'o',
+  'ú': 'u',
   'b': 'b',
   'c': 'k',
   'd': 'd',
@@ -113,26 +113,21 @@ export function textToIPA(text: string): string {
     }
 
     if (hasWrittenAccent(cleanWord)) {
-      const stressIndex = cleanWord.search(/[áéíóú]/i);
-      if (stressIndex !== -1) {
-        const beforeStress = ipa.substring(0, stressIndex);
-        const afterStress = ipa.substring(stressIndex);
+      let vowelCount = 0;
+      const accentIndex = cleanWord.search(/[áéíóú]/i);
 
-        const vowelPattern = /[aeiou]/;
-        let ipaStressPos = 0;
-        for (let j = 0; j < beforeStress.length; j++) {
-          if (vowelPattern.test(beforeStress[j])) {
-            ipaStressPos = j + 1;
-          }
+      for (let j = 0; j <= accentIndex; j++) {
+        if (/[aeiouáéíóú]/i.test(cleanWord[j])) {
+          vowelCount++;
         }
+      }
 
-        const nextVowelInAfter = afterStress.search(/[aeiou]/);
-        if (nextVowelInAfter !== -1) {
-          ipaStressPos = beforeStress.length + nextVowelInAfter;
-          const beforeVowel = ipa.substring(0, ipaStressPos);
-          const fromVowel = ipa.substring(ipaStressPos);
-          ipa = beforeVowel + '·' + fromVowel.replace(/·/g, '');
-        }
+      const vowelPattern = /[aeiou]/g;
+      const vowels = [...ipa.matchAll(vowelPattern)];
+
+      if (vowels[vowelCount - 1]) {
+        const vowelIndex = vowels[vowelCount - 1].index!;
+        ipa = ipa.substring(0, vowelIndex) + '·' + ipa.substring(vowelIndex);
       }
     } else {
       const vowelPattern = /[aeiou]/g;
