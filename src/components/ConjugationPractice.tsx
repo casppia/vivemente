@@ -49,13 +49,23 @@ export function ConjugationPractice({ level, tense }: Props) {
       - Use different subjects (yo, tú, él/ella, nosotros, ellos)
       - Mix statements, questions, and negatives
       - Keep vocabulary appropriate for ${level} level
-      - Include the IPA (International Phonetic Alphabet) transcription for the complete sentence (with the blank filled in with the correct verb form)
+      - Include the proper IPA (International Phonetic Alphabet) transcription for the complete sentence (with the blank filled in with the correct verb form)
+      - Use standard IPA symbols in brackets [like this] for Spanish pronunciation
+
+      IMPORTANT: For IPA transcription, use proper IPA symbols:
+      - Use [b] [d] [g] for stops, [β] [ð] [ɣ] for fricatives
+      - Use [ɾ] for tap r, [r] for trill rr
+      - Use [ʎ] for ll, [ɲ] for ñ
+      - Use [x] for j/g (before e,i)
+      - Use [θ] for c/z (in Castilian) or [s] (in Latin American)
+      - Mark stress with ˈ before stressed syllable
+      - Enclose entire transcription in square brackets [...]
 
       Return the response as a JSON array with this format:
       {
         "spanish": "¿_____ (ir) tú al mercado mañana?",
         "english": "Are you going to the market tomorrow?",
-        "ipa": "¿ˈbas tu al meɾˈka.ðo maˈɲa.na?",
+        "ipa": "[ˈbas tu al meɾˈkaðo maˈɲana]",
         "verb": {
           "infinitive": "ir",
           "correctForm": "vas",
