@@ -9,6 +9,7 @@ export interface VerbTense {
 export interface PracticeSentence {
   spanish: string;
   english: string;
+  ipa: string;
   verb: {
     infinitive: string;
     correctForm: string;

@@ -49,11 +49,13 @@ export function ConjugationPractice({ level, tense }: Props) {
       - Use different subjects (yo, tú, él/ella, nosotros, ellos)
       - Mix statements, questions, and negatives
       - Keep vocabulary appropriate for ${level} level
+      - Include the IPA (International Phonetic Alphabet) transcription for the complete sentence (with the blank filled in with the correct verb form)
 
       Return the response as a JSON array with this format:
       {
         "spanish": "¿_____ (ir) tú al mercado mañana?",
         "english": "Are you going to the market tomorrow?",
+        "ipa": "¿ˈbas tu al meɾˈka.ðo maˈɲa.na?",
         "verb": {
           "infinitive": "ir",
           "correctForm": "vas",
@@ -224,6 +226,9 @@ export function ConjugationPractice({ level, tense }: Props) {
                     </p>
                     <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                       {sentence.english}
+                    </p>
+                    <p className="text-indigo-600 dark:text-indigo-400 text-sm mt-1 font-mono">
+                      {sentence.ipa}
                     </p>
                   </div>
                   {showResults && (
