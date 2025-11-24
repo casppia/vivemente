@@ -13,7 +13,6 @@ interface SpeechSettings {
   pitch: number;
   volume: number;
   voiceURI: string;
-  useElevenLabs: boolean;
   elevenLabsVoiceId: string;
 }
 
@@ -48,8 +47,8 @@ class AudioPlayerInstance {
 
     audioManager.setCurrentPlayer(this);
 
-    // Try ElevenLabs first if enabled and available
-    if (settings.useElevenLabs && isElevenLabsAvailable()) {
+    // Try ElevenLabs first if available
+    if (isElevenLabsAvailable()) {
       console.log('Attempting to use ElevenLabs audio...');
       try {
         const audioBlob = await generateSpeech(text, settings.elevenLabsVoiceId);
@@ -64,7 +63,7 @@ class AudioPlayerInstance {
         console.error('ElevenLabs failed, falling back to Web Speech API:', error);
       }
     } else {
-      console.log('Using Web Speech API (ElevenLabs not enabled or not available)');
+      console.log('Using Web Speech API (ElevenLabs not available)');
     }
 
     // Fallback to Web Speech API
@@ -161,7 +160,6 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
     pitch: 1.0,
     volume: 1.0,
     voiceURI: '',
-    useElevenLabs: isElevenLabsAvailable(),
     elevenLabsVoiceId: getDefaultSpanishVoices()[0]?.voice_id || ''
   });
   const [showSettings, setShowSettings] = useState(false);
@@ -332,26 +330,15 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
             <div className="space-y-4">
               {isElevenLabsAvailable() && (
                 <div>
-                  <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <input
-                      type="checkbox"
-                      checked={settings.useElevenLabs}
-                      onChange={(e) => setSettings(prev => ({ ...prev, useElevenLabs: e.target.checked }))}
-                      className="mr-2"
-                    />
-                    Use ElevenLabs (Premium Quality)
-                  </label>
-                </div>
-              )}
-
-              {settings.useElevenLabs && isElevenLabsAvailable() && (
-                <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    ElevenLabs Voice
+                    Voice
                   </label>
                   <select
                     value={settings.elevenLabsVoiceId}
-                    onChange={(e) => setSettings(prev => ({ ...prev, elevenLabsVoiceId: e.target.value }))}
+                    onChange={(e) => {
+                      setSettings(prev => ({ ...prev, elevenLabsVoiceId: e.target.value }));
+                      setShowSettings(false);
+                    }}
                     className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
                   >
                     <optgroup label="Female Voices">
@@ -372,7 +359,7 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
                 </div>
               )}
 
-              {(!settings.useElevenLabs || !isElevenLabsAvailable()) && (
+              {!isElevenLabsAvailable() && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Voice
@@ -391,7 +378,7 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
                 </div>
               )}
 
-              {(!settings.useElevenLabs || !isElevenLabsAvailable()) && (
+              {!isElevenLabsAvailable() && (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
