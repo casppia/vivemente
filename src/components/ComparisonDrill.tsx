@@ -92,6 +92,18 @@ export function ComparisonDrill() {
       userAnswers: [],
       showResults: false,
     },
+    {
+      id: 'imperfectVerbs',
+      title: 'Había / Estaba / Era / Tenía',
+      description: 'Master the distinctions between key imperfect tense verbs',
+      examples: [],
+      practiceSentences: [],
+      isLoading: false,
+      isPracticing: false,
+      error: null,
+      userAnswers: [],
+      showResults: false,
+    },
   ]);
 
   const generateExamples = async (topicId: string) => {
@@ -186,6 +198,40 @@ export function ComparisonDrill() {
                 "english": "English translation"
               },
               "explanation": "Brief explanation of the preposition usage"
+            }
+          ]
+
+          Return ONLY the JSON array, no other text.`;
+          break;
+
+        case 'imperfectVerbs':
+          prompt = `Generate 3 pairs of Spanish sentences comparing había, estaba, era, and tenía.
+          For each pair:
+          - First sentence should use one of these verbs (había/estaba/era/tenía)
+          - Second sentence should use a different one, showing contrast
+          - Include English translations
+          - Add a brief explanation of when to use each verb
+          - Use natural, everyday Mexican Spanish vocabulary
+
+          Key distinctions to show:
+          - había = there was/were (existence/presence)
+          - estaba = was/were (location, temporary state)
+          - era = was/were (permanent characteristics, identity, time)
+          - tenía = had/used to have (possession, age)
+          ${contextPrompt}
+
+          Return the response as a JSON array with this format:
+          [
+            {
+              "first": {
+                "spanish": "Sentence with había/estaba/era/tenía",
+                "english": "English translation"
+              },
+              "second": {
+                "spanish": "Sentence with different verb",
+                "english": "English translation"
+              },
+              "explanation": "Brief explanation of why each verb is used"
             }
           ]
 
@@ -302,6 +348,36 @@ export function ComparisonDrill() {
               "correctAnswer": "para",
               "options": ["por", "para"],
               "explanation": "Use 'para' to indicate the recipient of something"
+            }
+          ]
+
+          Return ONLY the JSON array, no other text.`;
+          break;
+
+        case 'imperfectVerbs':
+          prompt = `Generate 5 Spanish sentences for había/estaba/era/tenía practice.
+          For each sentence:
+          - Create a sentence that clearly requires one of these verbs
+          - Replace the verb with _____
+          - Provide the correct verb as the answer
+          - Include English translations
+          - Add brief explanations of why that specific verb is correct
+          ${contextPrompt}
+
+          Key distinctions:
+          - había = there was/were (existence/presence)
+          - estaba = was/were (location, temporary state, estar + gerund)
+          - era = was/were (permanent characteristics, identity, time, professions)
+          - tenía = had/used to have (possession, age, physical sensations)
+
+          Return the response as a JSON array with this format:
+          [
+            {
+              "spanish": "En el parque _____ muchos niños jugando.",
+              "english": "In the park there were many children playing.",
+              "correctAnswer": "había",
+              "options": ["había", "estaba", "era", "tenía"],
+              "explanation": "Use 'había' to express existence or presence ('there was/were')"
             }
           ]
 
