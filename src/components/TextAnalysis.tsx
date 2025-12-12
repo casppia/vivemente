@@ -59,16 +59,31 @@ export function TextAnalysis({ level, showTranslation }: TextAnalysisProps) {
       };
     }
 
-    const stats = analyzedText.words.reduce(
-      (acc, word) => {
-        acc[word.type]++;
-        acc.total++;
-        return acc;
-      },
-      { verbs: 0, nouns: 0, adjectives: 0, total: 0 }
-    );
+    const verbsList: string[] = [];
+    const nounsList: string[] = [];
+    const adjectivesList: string[] = [];
+    let total = 0;
 
-    return stats;
+    analyzedText.words.forEach(word => {
+      if (word.type === 'verb') {
+        verbsList.push(word.text);
+      } else if (word.type === 'noun') {
+        nounsList.push(word.text);
+      } else if (word.type === 'adjective') {
+        adjectivesList.push(word.text);
+      }
+      total++;
+    });
+
+    return {
+      verbs: verbsList.length,
+      nouns: nounsList.length,
+      adjectives: adjectivesList.length,
+      total,
+      verbsList,
+      nounsList,
+      adjectivesList,
+    };
   };
 
   return (

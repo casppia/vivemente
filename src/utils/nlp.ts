@@ -109,44 +109,61 @@ export interface SentenceAnalysis {
 }
 
 class SpanishAnalyzer {
-  private async getTranslationAndCulturalNotes(text: string): Promise<{ translation: string; culturalNotes: string[] }> {
+  private async getTranslationAndCulturalNotes(text: string): Promise<{
+    translation: string;
+    culturalNotes: string[];
+    wordAnalysis: { [word: string]: { type: string; lemma: string; translation: string } };
+  }> {
     try {
       const prompt = `Analyze this Spanish text:
       "${text}"
-      
+
       Provide a response in this JSON format:
       {
         "translation": "English translation",
         "culturalNotes": [
           "Cultural insight 1",
           "Cultural insight 2"
-        ]
+        ],
+        "wordAnalysis": {
+          "word1": { "type": "verb|noun|adjective|other", "lemma": "base form", "translation": "English meaning" },
+          "word2": { "type": "verb|noun|adjective|other", "lemma": "base form", "translation": "English meaning" }
+        }
       }
-      
+
+      For wordAnalysis:
+      - Include ALL content words (verbs, nouns, adjectives)
+      - Skip articles, prepositions, and pronouns
+      - Type must be one of: verb, noun, adjective, or other
+      - Lemma is the dictionary/base form
+      - Translation is the English meaning
+
       Focus on:
       - Natural, accurate translation
       - Mexican Spanish specific expressions or words
       - Cultural context and regional variations
-      - Interesting idioms or colloquialisms
-      
+      - Accurate word type classification
+
       Return ONLY the JSON object, no other text.`;
 
       const response = await generateText(prompt, {
         model: 'gpt-3.5-turbo',
-        maxTokens: 500,
+        maxTokens: 1000,
         temperature: 0.7,
       });
 
       const result = JSON.parse(response);
       return {
         translation: result.translation || 'Translation unavailable',
-        culturalNotes: Array.isArray(result.culturalNotes) ? result.culturalNotes : []
+        culturalNotes: Array.isArray(result.culturalNotes) ? result.culturalNotes : [],
+        wordAnalysis: result.wordAnalysis || {}
       };
     } catch (error) {
       console.error('Error getting translation and cultural notes:', error);
       return {
         translation: 'Translation unavailable',
-        culturalNotes: []
+        culturalNotes: [],
+        wordAnalysis: {}
       };
     }
   }
@@ -272,8 +289,8 @@ class SpanishAnalyzer {
     }
 
     try {
-      // Get translation and cultural notes
-      const { translation, culturalNotes } = await this.getTranslationAndCulturalNotes(text);
+      // Get translation, cultural notes, and AI word analysis (single API call)
+      const { translation, culturalNotes, wordAnalysis } = await this.getTranslationAndCulturalNotes(text);
 
       // Tokenize the text
       const tokens = text.match(/[\wáéíóúüñÁÉÍÓÚÜÑ]+|[.,!?;:¿¡]/g) || [];
@@ -284,39 +301,63 @@ class SpanishAnalyzer {
         const normalized = token.toLowerCase();
         let type: AnalyzedWord['type'] = 'other';
         let features: AnalyzedWord['features'] = { pos: 'other' };
+        let lemma = normalized;
+        let wordTranslation: string | undefined;
 
-        // Determine word type and features
-        if (spanishPatterns.verb.pattern.test(normalized)) {
-          type = 'verb';
-          features = this.getVerbFeatures(normalized);
-        } else if (spanishPatterns.noun.pattern.test(normalized)) {
-          type = 'noun';
-          features = this.getNounFeatures(normalized);
-        } else if (spanishPatterns.adjective.pattern.test(normalized)) {
-          type = 'adjective';
-          features = this.getAdjectiveFeatures(normalized);
-        } else if (spanishPatterns.adverb.pattern.test(normalized)) {
-          type = 'adverb';
-          features = { pos: 'adverb' };
-        } else if (spanishPatterns.preposition.pattern.test(normalized)) {
-          type = 'preposition';
-          features = { pos: 'preposition' };
-        } else if (spanishPatterns.determiner.pattern.test(normalized)) {
-          type = 'determiner';
-          features = { pos: 'determiner' };
-        } else if (spanishPatterns.pronoun.pattern.test(normalized)) {
-          type = 'pronoun';
-          features = { pos: 'pronoun' };
+        // Check if AI provided analysis for this word
+        const aiAnalysis = wordAnalysis[normalized] || wordAnalysis[token];
+
+        if (aiAnalysis) {
+          // Use AI analysis as primary source
+          type = aiAnalysis.type as AnalyzedWord['type'];
+          lemma = aiAnalysis.lemma || normalized;
+          wordTranslation = aiAnalysis.translation;
+
+          // Get detailed features based on type
+          if (type === 'verb') {
+            features = this.getVerbFeatures(normalized);
+          } else if (type === 'noun') {
+            features = this.getNounFeatures(normalized);
+          } else if (type === 'adjective') {
+            features = this.getAdjectiveFeatures(normalized);
+          } else {
+            features = { pos: type };
+          }
+        } else {
+          // Fallback to regex-based analysis
+          if (spanishPatterns.verb.pattern.test(normalized)) {
+            type = 'verb';
+            features = this.getVerbFeatures(normalized);
+          } else if (spanishPatterns.noun.pattern.test(normalized)) {
+            type = 'noun';
+            features = this.getNounFeatures(normalized);
+          } else if (spanishPatterns.adjective.pattern.test(normalized)) {
+            type = 'adjective';
+            features = this.getAdjectiveFeatures(normalized);
+          } else if (spanishPatterns.adverb.pattern.test(normalized)) {
+            type = 'adverb';
+            features = { pos: 'adverb' };
+          } else if (spanishPatterns.preposition.pattern.test(normalized)) {
+            type = 'preposition';
+            features = { pos: 'preposition' };
+          } else if (spanishPatterns.determiner.pattern.test(normalized)) {
+            type = 'determiner';
+            features = { pos: 'determiner' };
+          } else if (spanishPatterns.pronoun.pattern.test(normalized)) {
+            type = 'pronoun';
+            features = { pos: 'pronoun' };
+          }
+
+          // Get lemma using fallback method
+          lemma = this.getLemma(normalized, type);
         }
-
-        // Get lemma
-        const lemma = this.getLemma(normalized, type);
 
         // Add word analysis
         words.push({
           text: token,
           type,
           lemma,
+          translation: wordTranslation,
           features: {
             ...features,
             isNegated: text.includes('no '),
