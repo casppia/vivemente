@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
-import { Mic, StopCircle, RefreshCw } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Mic, StopCircle, RefreshCw, Volume2, Pause } from 'lucide-react';
 import RecordRTC from 'recordrtc';
 import { transcribeAudio, generateText } from '../utils/openai';
 
@@ -15,13 +15,42 @@ interface TextRecorderProps {
 export function TextRecorder({ text, onFeedback }: TextRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const recorderRef = useRef<RecordRTC | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recordedAudioUrl) {
+        URL.revokeObjectURL(recordedAudioUrl);
+      }
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [recordedAudioUrl]);
 
   const startRecording = useCallback(async () => {
     try {
       setError(null);
+
+      // Clean up previous recording
+      if (recordedAudioUrl) {
+        URL.revokeObjectURL(recordedAudioUrl);
+        setRecordedAudioUrl(null);
+      }
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        setIsPlaying(false);
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
@@ -47,7 +76,7 @@ export function TextRecorder({ text, onFeedback }: TextRecorderProps) {
       setError('Could not access microphone. Please check permissions.');
       console.error('Microphone access error:', err);
     }
-  }, [isRecording]);
+  }, [isRecording, recordedAudioUrl]);
 
   const stopRecording = useCallback(async () => {
     if (!recorderRef.current) return;
@@ -61,6 +90,10 @@ export function TextRecorder({ text, onFeedback }: TextRecorderProps) {
         if (!blob) {
           throw new Error('No recording data available');
         }
+
+        // Create URL for playback
+        const audioUrl = URL.createObjectURL(blob);
+        setRecordedAudioUrl(audioUrl);
 
         // Clean up media stream
         if (mediaStreamRef.current) {
@@ -77,7 +110,7 @@ export function TextRecorder({ text, onFeedback }: TextRecorderProps) {
 
           Original: "${text}"
           Transcribed: "${transcribedText}"
-          
+
           Return response as JSON with this format:
           {
             "pronunciation": "Detailed feedback about pronunciation and accent",
@@ -90,7 +123,7 @@ export function TextRecorder({ text, onFeedback }: TextRecorderProps) {
           - Accent and intonation
           - Grammar correctness
           - Natural flow
-          
+
           Return ONLY the JSON object, no other text.`;
 
           const response = await generateText(prompt, {
@@ -115,32 +148,85 @@ export function TextRecorder({ text, onFeedback }: TextRecorderProps) {
     }
   }, [text, onFeedback]);
 
+  const togglePlayback = useCallback(() => {
+    if (!recordedAudioUrl) return;
+
+    if (isPlaying) {
+      // Stop playback
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current.currentTime = 0;
+      }
+      setIsPlaying(false);
+    } else {
+      // Start playback
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+
+      const audio = new Audio(recordedAudioUrl);
+      audioPlayerRef.current = audio;
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        audioPlayerRef.current = null;
+      };
+
+      audio.onerror = () => {
+        setError('Failed to play recording');
+        setIsPlaying(false);
+        audioPlayerRef.current = null;
+      };
+
+      audio.play();
+      setIsPlaying(true);
+    }
+  }, [recordedAudioUrl, isPlaying]);
+
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
       {!isRecording ? (
         <button
           onClick={startRecording}
           disabled={isProcessing}
-          className={`p-3 rounded-full transition-colors ${
+          className={`p-2 rounded-full transition-colors ${
             isProcessing
               ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              : 'bg-red-600 hover:bg-red-700 text-white'
           }`}
           title="Start recording"
         >
           {isProcessing ? (
-            <RefreshCw className="w-6 h-6 animate-spin" />
+            <RefreshCw className="w-5 h-5 animate-spin" />
           ) : (
-            <Mic className="w-6 h-6" />
+            <Mic className="w-5 h-5" />
           )}
         </button>
       ) : (
         <button
           onClick={stopRecording}
-          className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors animate-pulse"
+          className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors animate-pulse"
           title="Stop recording"
         >
-          <StopCircle className="w-6 h-6" />
+          <StopCircle className="w-5 h-5" />
+        </button>
+      )}
+
+      {recordedAudioUrl && !isRecording && !isProcessing && (
+        <button
+          onClick={togglePlayback}
+          className={`p-2 rounded-full transition-colors ${
+            isPlaying
+              ? 'bg-gray-600 hover:bg-gray-700 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          }`}
+          title={isPlaying ? 'Stop playback' : 'Play your recording'}
+        >
+          {isPlaying ? (
+            <Pause className="w-5 h-5" />
+          ) : (
+            <Volume2 className="w-5 h-5" />
+          )}
         </button>
       )}
 
