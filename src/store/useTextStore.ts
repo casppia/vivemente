@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Subject, Word, GeneratedText, WordType } from '../types/text';
+import { Subject, Word, GeneratedText, WordType, AnalyzedWord } from '../types/text';
 import { CEFRLevel } from '../types/level';
 import { generateText } from '../utils/openai';
 import { spanishAnalyzer } from '../utils/nlp';
@@ -49,31 +49,7 @@ export const useTextStore = create<TextState>()(
 
           const initialData = JSON.parse(response);
 
-          // Check if grammar analysis is provided by AI
-          let verbs: string[] = [];
-          let nouns: string[] = [];
-          let adjectives: string[] = [];
-
-          if (initialData.grammar) {
-            // Use AI-provided grammar analysis
-            verbs = Array.isArray(initialData.grammar.verbs) ? initialData.grammar.verbs : [];
-            nouns = Array.isArray(initialData.grammar.nouns) ? initialData.grammar.nouns : [];
-            adjectives = Array.isArray(initialData.grammar.adjectives) ? initialData.grammar.adjectives : [];
-          } else {
-            // Fallback to local analysis if AI doesn't provide grammar
-            const analyzedParagraphs = await Promise.all(
-              initialData.spanish.map(async (text: string) => {
-                const analysis = await spanishAnalyzer.analyzeSentence(text);
-                return analysis;
-              })
-            );
-            const allWords = analyzedParagraphs.flatMap(analysis => analysis.words);
-            verbs = allWords.filter(w => w.type === 'verb').map(w => w.text);
-            nouns = allWords.filter(w => w.type === 'noun').map(w => w.text);
-            adjectives = allWords.filter(w => w.type === 'adjective').map(w => w.text);
-          }
-
-          // Analyze paragraphs for word-level details
+          // Perform local analysis ONCE to get detailed word information
           const analyzedParagraphs = await Promise.all(
             initialData.spanish.map(async (text: string) => {
               const analysis = await spanishAnalyzer.analyzeSentence(text);
@@ -81,15 +57,63 @@ export const useTextStore = create<TextState>()(
             })
           );
 
-          // Combine all words from analysis for word tooltips
-          const allWords = analyzedParagraphs.flatMap(analysis => analysis.words);
+          // Combine all words from analysis
+          let allWords = analyzedParagraphs.flatMap(analysis => analysis.words);
 
-          // Create the final text object with analyzed words by paragraph
+          // Get AI grammar analysis and use it to correct word types
+          let verbs: string[] = [];
+          let nouns: string[] = [];
+          let adjectives: string[] = [];
+
+          if (initialData.grammar) {
+            // AI provided grammar analysis - use it as source of truth for word types
+            verbs = Array.isArray(initialData.grammar.verbs) ? initialData.grammar.verbs : [];
+            nouns = Array.isArray(initialData.grammar.nouns) ? initialData.grammar.nouns : [];
+            adjectives = Array.isArray(initialData.grammar.adjectives) ? initialData.grammar.adjectives : [];
+
+            // Create lookup maps for efficient word type correction (case-insensitive)
+            const verbsSet = new Set(verbs.map(v => v.toLowerCase().trim()));
+            const nounsSet = new Set(nouns.map(n => n.toLowerCase().trim()));
+            const adjectivesSet = new Set(adjectives.map(a => a.toLowerCase().trim()));
+
+            // Correct word types based on AI analysis
+            allWords = allWords.map(word => {
+              const wordLower = word.text.toLowerCase().trim();
+
+              if (verbsSet.has(wordLower)) {
+                return { ...word, type: 'verb' as const };
+              } else if (nounsSet.has(wordLower)) {
+                return { ...word, type: 'noun' as const };
+              } else if (adjectivesSet.has(wordLower)) {
+                return { ...word, type: 'adjective' as const };
+              }
+
+              return word;
+            });
+          } else {
+            // Fallback: use local analysis for grammar lists
+            verbs = allWords.filter(w => w.type === 'verb').map(w => w.text);
+            nouns = allWords.filter(w => w.type === 'noun').map(w => w.text);
+            adjectives = allWords.filter(w => w.type === 'adjective').map(w => w.text);
+          }
+
+          // Rebuild wordsByParagraph with corrected word types
+          const wordsByParagraph = analyzedParagraphs.map(analysis => {
+            return analysis.words.map((word: AnalyzedWord) => {
+              const correctedWord = allWords.find(w =>
+                w.text.toLowerCase() === word.text.toLowerCase() &&
+                w.lemma === word.lemma
+              );
+              return correctedWord || word;
+            });
+          });
+
+          // Create the final text object with corrected analyzed words
           const finalText: GeneratedText = {
             spanish: initialData.spanish,
             english: initialData.english,
-            words: allWords,  // Keep AnalyzedWord[] for tooltip functionality
-            wordsByParagraph: analyzedParagraphs.map(analysis => analysis.words),
+            words: allWords,
+            wordsByParagraph,
             savedWords: allWords
               .filter(w => w.type === 'verb' || w.type === 'noun' || w.type === 'adjective')
               .map(word => ({
