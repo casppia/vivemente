@@ -3,13 +3,28 @@ import { Mic, StopCircle, RefreshCw, Volume2, Pause } from 'lucide-react';
 import RecordRTC from 'recordrtc';
 import { transcribeAudio, generateText } from '../utils/openai';
 
+export interface PronunciationFeedback {
+  pronunciation: string;
+  grammar: string;
+  suggestions: string[];
+  score?: {
+    overall: number;
+    pronunciation: number;
+    fluency: number;
+    accuracy: number;
+  };
+  problemWords?: Array<{
+    word: string;
+    issue: string;
+    tip: string;
+  }>;
+  strengths?: string[];
+  detailedTips?: string[];
+}
+
 interface TextRecorderProps {
   text: string;
-  onFeedback: (feedback: {
-    pronunciation: string;
-    grammar: string;
-    suggestions: string[];
-  }) => void;
+  onFeedback: (feedback: PronunciationFeedback) => void;
 }
 
 export function TextRecorder({ text, onFeedback }: TextRecorderProps) {
@@ -105,30 +120,57 @@ export function TextRecorder({ text, onFeedback }: TextRecorderProps) {
           // First, get the transcription from Whisper API
           const transcribedText = await transcribeAudio(blob);
 
-          // Then, get feedback by comparing with the original text
-          const prompt = `Compare this Spanish speech transcription with the original text and provide feedback:
+          // Then, get detailed feedback by comparing with the original text
+          const prompt = `Analyze this Spanish speech and provide comprehensive pronunciation feedback:
 
-          Original: "${text}"
-          Transcribed: "${transcribedText}"
+          Original Text: "${text}"
+          Transcribed Speech: "${transcribedText}"
 
-          Return response as JSON with this format:
+          Return response as JSON with this EXACT format:
           {
-            "pronunciation": "Detailed feedback about pronunciation and accent",
-            "grammar": "Analysis of grammar usage and corrections if needed",
-            "suggestions": ["Specific improvement suggestion 1", "Specific improvement suggestion 2"]
+            "pronunciation": "Overall pronunciation assessment with specific details about accent, clarity, and native-like qualities",
+            "grammar": "Grammar analysis and corrections if needed",
+            "suggestions": ["Actionable suggestion 1", "Actionable suggestion 2", "Actionable suggestion 3"],
+            "score": {
+              "overall": 85,
+              "pronunciation": 80,
+              "fluency": 90,
+              "accuracy": 85
+            },
+            "problemWords": [
+              {
+                "word": "palabra",
+                "issue": "The 'r' sound was too soft",
+                "tip": "Roll your tongue more for the Spanish 'r' sound"
+              }
+            ],
+            "strengths": ["Good intonation", "Clear vowel sounds", "Natural rhythm"],
+            "detailedTips": [
+              "Focus on rolling the 'r' sound in Spanish words",
+              "Practice the difference between Spanish 'b' and 'v' sounds",
+              "Work on stress patterns in multi-syllable words"
+            ]
           }
 
-          Focus on:
-          - Pronunciation accuracy
-          - Accent and intonation
-          - Grammar correctness
-          - Natural flow
+          Scoring (0-100 scale):
+          - overall: Overall performance
+          - pronunciation: Clarity and accuracy of sounds
+          - fluency: Natural flow and rhythm
+          - accuracy: How close to the original text
 
-          Return ONLY the JSON object, no other text.`;
+          Analyze:
+          1. Specific pronunciation issues (consonants, vowels, stress patterns)
+          2. Words that were mispronounced or unclear
+          3. Positive aspects of the pronunciation
+          4. Concrete tips for improvement
+          5. Accent and intonation patterns
+          6. Fluency and natural flow
+
+          Be specific, encouraging, and constructive. Return ONLY the JSON object.`;
 
           const response = await generateText(prompt, {
             model: 'gpt-3.5-turbo',
-            maxTokens: 500,
+            maxTokens: 1000,
             temperature: 0.7,
           });
 
