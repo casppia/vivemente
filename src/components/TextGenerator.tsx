@@ -7,6 +7,14 @@ import { SpanishAudioPlayer } from './SpanishAudioPlayer';
 import { TextStats } from './TextStats';
 import { AnalyzedText } from './AnalyzedText';
 
+const TENSES = [
+  { value: 'present', label: 'Present' },
+  { value: 'preterite', label: 'Preterite' },
+  { value: 'imperfect', label: 'Imperfect' },
+  { value: 'future', label: 'Future' },
+  { value: 'subjunctive', label: 'Subjunctive' },
+] as const;
+
 export function TextGenerator() {
   const {
     selectedSubject,
@@ -23,6 +31,15 @@ export function TextGenerator() {
   } = useTextStore();
 
   const [showSubjectInfo, setShowSubjectInfo] = useState<string | null>(null);
+  const [selectedTenses, setSelectedTenses] = useState<string[]>([]);
+
+  const handleTenseToggle = (tenseValue: string) => {
+    setSelectedTenses(prev =>
+      prev.includes(tenseValue)
+        ? prev.filter(t => t !== tenseValue)
+        : [...prev, tenseValue]
+    );
+  };
 
   const handleGenerate = async () => {
     if (!selectedSubject || (selectedSubject === 'Custom' && !customTopic.trim())) {
@@ -32,14 +49,18 @@ export function TextGenerator() {
     const topic = selectedSubject === 'Custom' ? customTopic : selectedSubject;
     const selectedSubjectData = SUBJECTS.find(s => s.value === selectedSubject);
 
+    const tenseInstruction = selectedTenses.length > 0
+      ? `\n\n**Tense Requirements:**\nFocus on using the following verb tenses in the text: ${selectedTenses.map(t => TENSES.find(tense => tense.value === t)?.label).join(', ')}. Incorporate these tenses naturally throughout the text.`
+      : '';
+
     let prompt;
     if (selectedSubjectData?.promptTemplate) {
-      prompt = selectedSubjectData.promptTemplate.replace('{level}', selectedLevel);
+      prompt = selectedSubjectData.promptTemplate.replace('{level}', selectedLevel) + tenseInstruction;
     } else {
       prompt = `You are a Spanish language text generator and grammar analyzer. Follow these steps:
 
 **Step 1: Generate Spanish Text**
-Generate 2-3 paragraphs about "${topic}" in Spanish, strictly following ${selectedLevel} CEFR level guidelines.
+Generate 2-3 paragraphs about "${topic}" in Spanish, strictly following ${selectedLevel} CEFR level guidelines.${tenseInstruction}
 
 **Step 2: Analyze Grammar - Extract ALL Verbs**
 Your task is to identify and extract ALL verbs from the Spanish text, including all verb forms and tenses.
@@ -148,6 +169,35 @@ Return a JSON object with this exact format:
                   </option>
                 ))}
               </select>
+            </label>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
+                Verb Tenses (Optional)
+              </span>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {TENSES.map((tense) => (
+                  <label
+                    key={tense.value}
+                    className="flex items-center gap-2 cursor-pointer group"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTenses.includes(tense.value)}
+                      onChange={() => handleTenseToggle(tense.value)}
+                      className="w-4 h-4 text-indigo-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                      {tense.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Select specific tenses to focus on in the generated text
+              </p>
             </label>
           </div>
 
