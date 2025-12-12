@@ -116,6 +116,18 @@ export function ComparisonDrill() {
       userAnswers: [],
       showResults: false,
     },
+    {
+      id: 'serEstar',
+      title: 'Ser vs Estar',
+      description: 'Master when to use ser or estar',
+      examples: [],
+      practiceSentences: [],
+      isLoading: false,
+      isPracticing: false,
+      error: null,
+      userAnswers: [],
+      showResults: false,
+    },
   ]);
 
   const generateExamples = async (topicId: string) => {
@@ -284,6 +296,42 @@ export function ComparisonDrill() {
                 "english": "English translation"
               },
               "explanation": "Brief explanation of the difference in meaning"
+            }
+          ]
+
+          Return ONLY the JSON array, no other text.`;
+          break;
+
+        case 'serEstar':
+          prompt = `Generate 3 pairs of Spanish sentences comparing ser and estar.
+          For each pair:
+          - First sentence should use ser
+          - Second sentence should use estar
+          - Show clear contrast in usage and meaning
+          - Include English translations
+          - Add a brief explanation of when to use each verb
+          - Use natural, everyday Mexican Spanish vocabulary
+          - Use different tenses (present, preterite, imperfect, etc.)
+          ${contextPrompt}
+
+          Key distinctions to demonstrate:
+          - ser: permanent characteristics, identity, origin, profession, time, dates
+          - estar: location, temporary states, emotions, ongoing actions (with gerund)
+          - Show how meaning changes with adjectives (e.g., ser listo vs estar listo)
+          - Include examples with both people and things
+
+          Return the response as a JSON array with this format:
+          [
+            {
+              "first": {
+                "spanish": "Sentence with ser (e.g., Mi hermano es muy alto)",
+                "english": "English translation"
+              },
+              "second": {
+                "spanish": "Sentence with estar (e.g., Mi hermano está cansado)",
+                "english": "English translation"
+              },
+              "explanation": "Brief explanation of why ser vs estar is used"
             }
           ]
 
@@ -475,6 +523,44 @@ export function ComparisonDrill() {
               "correctAnswer": "pone",
               "options": ["pone", "se pone", "puso", "se puso"],
               "explanation": "Use 'pone' (non-reflexive) because she's putting books on the table, not on herself"
+            }
+          ]
+
+          Return ONLY the JSON array, no other text.`;
+          break;
+
+        case 'serEstar':
+          prompt = `Generate 5 Spanish sentences for ser vs estar practice.
+          For each sentence:
+          - Create a sentence that clearly requires either ser or estar
+          - Replace the verb with _____
+          - Provide the correct conjugated form as the answer
+          - Include English translations
+          - Add brief explanations of why ser or estar is correct
+          - Use varied tenses (present, preterite, imperfect, future, etc.)
+          - Include different contexts: adjectives, locations, professions, emotions, ongoing actions
+          ${contextPrompt}
+
+          Key rules to demonstrate:
+          - ser: permanent characteristics, identity, origin, profession, material, time, dates, possession
+          - estar: location, temporary states, emotions, conditions, progressive tenses (with gerund)
+          - Adjectives that change meaning: ser listo (smart) vs estar listo (ready), ser aburrido (boring) vs estar aburrido (bored), ser bueno (good person) vs estar bueno (tasty/attractive)
+
+          Return the response as a JSON array with this format:
+          [
+            {
+              "spanish": "Mi hermana _____ doctora.",
+              "english": "My sister is a doctor.",
+              "correctAnswer": "es",
+              "options": ["es", "está", "era", "estaba"],
+              "explanation": "Use 'es' (ser) for professions and occupations"
+            },
+            {
+              "spanish": "La sopa _____ muy caliente.",
+              "english": "The soup is very hot.",
+              "correctAnswer": "está",
+              "options": ["es", "está", "era", "estaba"],
+              "explanation": "Use 'está' (estar) for temporary conditions like temperature"
             }
           ]
 
