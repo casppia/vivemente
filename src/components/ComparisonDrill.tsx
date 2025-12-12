@@ -104,6 +104,18 @@ export function ComparisonDrill() {
       userAnswers: [],
       showResults: false,
     },
+    {
+      id: 'reflexiveVerbs',
+      title: 'Reflexive vs Non-Reflexive Verbs',
+      description: 'Practice distinguishing between reflexive and non-reflexive forms',
+      examples: [],
+      practiceSentences: [],
+      isLoading: false,
+      isPracticing: false,
+      error: null,
+      userAnswers: [],
+      showResults: false,
+    },
   ]);
 
   const generateExamples = async (topicId: string) => {
@@ -232,6 +244,46 @@ export function ComparisonDrill() {
                 "english": "English translation"
               },
               "explanation": "Brief explanation of why each verb is used"
+            }
+          ]
+
+          Return ONLY the JSON array, no other text.`;
+          break;
+
+        case 'reflexiveVerbs':
+          prompt = `Generate 3 pairs of Spanish sentences comparing reflexive and non-reflexive verb forms.
+          For each pair:
+          - First sentence should use the non-reflexive form
+          - Second sentence should use the reflexive form (with "se")
+          - Show clear contrast in meaning
+          - Include English translations
+          - Add a brief explanation of the difference
+          - Use natural, everyday Mexican Spanish vocabulary
+          - Mix different verb pairs from this list: caer/caerse, poner/ponerse, llevar/llevarse, sentir/sentirse, echar/echarse, parecer/parecerse, quedar/quedarse
+          - Use different tenses (present, preterite, imperfect, etc.)
+          ${contextPrompt}
+
+          Key concepts to demonstrate:
+          - caer (to fall) vs caerse (to fall down/over)
+          - poner (to put/place) vs ponerse (to put on/become)
+          - llevar (to carry/wear) vs llevarse (to take away/get along)
+          - sentir (to feel/regret) vs sentirse (to feel)
+          - echar (to throw/pour) vs echarse (to lie down)
+          - parecer (to seem) vs parecerse (to resemble)
+          - quedar (to remain/be left) vs quedarse (to stay)
+
+          Return the response as a JSON array with this format:
+          [
+            {
+              "first": {
+                "spanish": "Sentence without reflexive (e.g., Ella pone la mesa todos los días)",
+                "english": "English translation"
+              },
+              "second": {
+                "spanish": "Sentence with reflexive (e.g., Ella se pone el vestido rojo)",
+                "english": "English translation"
+              },
+              "explanation": "Brief explanation of the difference in meaning"
             }
           ]
 
@@ -378,6 +430,51 @@ export function ComparisonDrill() {
               "correctAnswer": "había",
               "options": ["había", "estaba", "era", "tenía"],
               "explanation": "Use 'había' to express existence or presence ('there was/were')"
+            }
+          ]
+
+          Return ONLY the JSON array, no other text.`;
+          break;
+
+        case 'reflexiveVerbs':
+          prompt = `Generate 5 Spanish sentences for reflexive vs non-reflexive verb practice.
+          For each sentence:
+          - Create a sentence requiring either reflexive or non-reflexive form
+          - Replace the verb with _____
+          - Provide the correct verb form as the answer (with or without "se")
+          - Include English translations
+          - Add brief explanations of why reflexive or non-reflexive is correct
+          - Mix all seven verb pairs: caer/caerse, poner/ponerse, llevar/llevarse, sentir/sentirse, echar/echarse, parecer/parecerse, quedar/quedarse
+          - Use varied tenses (present, preterite, imperfect, future, etc.)
+          - Include different exercise types: some need reflexive, some need non-reflexive
+          ${contextPrompt}
+
+          Key distinctions:
+          - caer (to fall) vs caerse (to fall down/over - reflexive)
+          - poner (to put/place) vs ponerse (to put on/become - reflexive)
+          - llevar (to carry/wear) vs llevarse (to take away/get along - reflexive)
+          - sentir (to feel/regret) vs sentirse (to feel a certain way - reflexive)
+          - echar (to throw/pour) vs echarse (to lie down/throw oneself - reflexive)
+          - parecer (to seem/appear) vs parecerse (to resemble/look like - reflexive)
+          - quedar (to remain/be left) vs quedarse (to stay in a place - reflexive)
+
+          Important: Mix both reflexive and non-reflexive forms in the exercises. The options should include both forms with proper conjugation.
+
+          Return the response as a JSON array with this format:
+          [
+            {
+              "spanish": "María _____ el abrigo porque hace frío.",
+              "english": "María puts on her coat because it's cold.",
+              "correctAnswer": "se pone",
+              "options": ["pone", "se pone", "puso", "se puso"],
+              "explanation": "Use 'se pone' (reflexive) because she's putting the coat on herself"
+            },
+            {
+              "spanish": "Ella _____ los libros en la mesa.",
+              "english": "She puts the books on the table.",
+              "correctAnswer": "pone",
+              "options": ["pone", "se pone", "puso", "se puso"],
+              "explanation": "Use 'pone' (non-reflexive) because she's putting books on the table, not on herself"
             }
           ]
 
