@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Volume2, Pause, AlertCircle } from 'lucide-react';
 import { useSpanishSpeech } from '../hooks/useSpanishSpeech';
 
@@ -8,17 +9,26 @@ interface SpanishAudioButtonProps {
 
 export function SpanishAudioButton({ text, className = '' }: SpanishAudioButtonProps) {
   const { speak, stop, isPlaying, hasVoice } = useSpanishSpeech();
+  const isProcessingRef = useRef(false);
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    // Prevent multiple rapid clicks
+    if (isProcessingRef.current) return;
+
     if (isPlaying) {
       stop();
     } else {
-      speak(text).catch(error => {
+      isProcessingRef.current = true;
+      try {
+        await speak(text);
+      } catch (error: any) {
         // Only log non-interruption errors
         if (!error.message.includes('interrupted') && !error.message.includes('canceled')) {
           console.error('Failed to play audio:', error);
         }
-      });
+      } finally {
+        isProcessingRef.current = false;
+      }
     }
   };
 
@@ -37,16 +47,13 @@ export function SpanishAudioButton({ text, className = '' }: SpanishAudioButtonP
   return (
     <button
       onClick={handleClick}
-      disabled={isPlaying}
-      className={`inline-flex items-center justify-center p-2 rounded-full transition-colors ${
-        isPlaying
-          ? 'text-indigo-600 dark:text-indigo-400 cursor-not-allowed opacity-70'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+      className={`inline-flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+        isPlaying ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-400'
       } ${className}`}
-      title={isPlaying ? 'Playing audio...' : 'Play audio'}
+      title={isPlaying ? 'Pause audio' : 'Play audio'}
     >
       {isPlaying ? (
-        <Pause className="w-5 h-5 animate-pulse" />
+        <Pause className="w-5 h-5" />
       ) : (
         <Volume2 className="w-5 h-5" />
       )}

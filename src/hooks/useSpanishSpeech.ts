@@ -116,61 +116,75 @@ export function useSpanishSpeech() {
         // Always stop any ongoing speech
         stop();
 
-        // Ensure we have a voice
-        if (!voices.length) {
-          throw new Error('No Spanish voice available');
-        }
+        // Small delay to ensure speech synthesis is fully stopped
+        setTimeout(() => {
+          try {
+            // Ensure we have a voice
+            if (!voices.length) {
+              throw new Error('No Spanish voice available');
+            }
 
-        // Create new utterance
-        const utterance = new SpeechSynthesisUtterance(text);
-        utteranceRef.current = utterance;
+            // Create new utterance
+            const utterance = new SpeechSynthesisUtterance(text);
+            utteranceRef.current = utterance;
 
-        // Configure utterance
-        utterance.voice = voices[0];
-        utterance.lang = 'es-MX';
-        utterance.rate = options.rate ?? 0.9;
-        utterance.pitch = options.pitch ?? 1.0;
-        utterance.volume = 1.0;
+            // Configure utterance
+            utterance.voice = voices[0];
+            utterance.lang = 'es-MX';
+            utterance.rate = options.rate ?? 0.9;
+            utterance.pitch = options.pitch ?? 1.0;
+            utterance.volume = 1.0;
 
-        // Event handlers
-        utterance.onstart = () => {
-          setState(prev => ({ ...prev, isPlaying: true, error: null }));
-          console.log('Speech started:', {
-            voice: utterance.voice?.name,
-            lang: utterance.voice?.lang
-          });
-        };
+            // Event handlers
+            utterance.onstart = () => {
+              setState(prev => ({ ...prev, isPlaying: true, error: null }));
+              console.log('Speech started:', {
+                voice: utterance.voice?.name,
+                lang: utterance.voice?.lang
+              });
+            };
 
-        utterance.onend = () => {
-          utteranceRef.current = null;
-          setState(prev => ({ ...prev, isPlaying: false }));
-          console.log('Speech completed successfully');
-          resolve();
-        };
+            utterance.onend = () => {
+              utteranceRef.current = null;
+              setState(prev => ({ ...prev, isPlaying: false }));
+              console.log('Speech completed successfully');
+              resolve();
+            };
 
-        utterance.onerror = (event) => {
-          console.error('Speech error:', event);
-          
-          // Handle interruption separately
-          if (event.error === 'interrupted' || event.error === 'canceled') {
+            utterance.onerror = (event) => {
+              console.error('Speech error:', event);
+
+              // Handle interruption separately
+              if (event.error === 'interrupted' || event.error === 'canceled') {
+                utteranceRef.current = null;
+                setState(prev => ({ ...prev, isPlaying: false }));
+                resolve();
+                return;
+              }
+
+              // Handle other errors
+              utteranceRef.current = null;
+              setState(prev => ({
+                ...prev,
+                isPlaying: false,
+                error: `Speech synthesis failed: ${event.error}`
+              }));
+              reject(new Error(`Speech synthesis failed: ${event.error}`));
+            };
+
+            // Start speaking
+            window.speechSynthesis.speak(utterance);
+          } catch (error) {
+            console.error('Speech synthesis initialization error:', error);
             utteranceRef.current = null;
-            setState(prev => ({ ...prev, isPlaying: false }));
-            resolve();
-            return;
+            setState(prev => ({
+              ...prev,
+              isPlaying: false,
+              error: error instanceof Error ? error.message : 'Failed to initialize speech'
+            }));
+            reject(error);
           }
-
-          // Handle other errors
-          utteranceRef.current = null;
-          setState(prev => ({
-            ...prev,
-            isPlaying: false,
-            error: `Speech synthesis failed: ${event.error}`
-          }));
-          reject(new Error(`Speech synthesis failed: ${event.error}`));
-        };
-
-        // Start speaking
-        window.speechSynthesis.speak(utterance);
+        }, 50);
 
       } catch (error) {
         console.error('Speech synthesis initialization error:', error);
