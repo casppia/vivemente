@@ -282,14 +282,18 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
       <div className="flex items-center gap-2">
         <button
           onClick={togglePlayPause}
-          disabled={!isVoicesLoaded}
-          className={`inline-flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
-            isPlaying ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-400'
-          } ${!isVoicesLoaded ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
-          title={isPlaying ? 'Pause' : 'Play audio'}
+          disabled={!isVoicesLoaded || isPlaying}
+          className={`inline-flex items-center justify-center p-2 rounded-full transition-colors ${
+            isPlaying
+              ? 'text-indigo-600 dark:text-indigo-400 cursor-not-allowed opacity-70'
+              : !isVoicesLoaded
+              ? 'opacity-50 cursor-not-allowed text-gray-600 dark:text-gray-400'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+          } ${className}`}
+          title={isPlaying ? 'Playing audio...' : !isVoicesLoaded ? 'Loading voices...' : 'Play audio'}
         >
           {isPlaying ? (
-            <Pause className="w-5 h-5" />
+            <Pause className="w-5 h-5 animate-pulse" />
           ) : (
             <Volume2 className="w-5 h-5" />
           )}

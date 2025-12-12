@@ -7,7 +7,7 @@ interface SpanishAudioButtonProps {
 }
 
 export function SpanishAudioButton({ text, className = '' }: SpanishAudioButtonProps) {
-  const { speak, stop, isPlaying, error, hasVoice } = useSpanishSpeech();
+  const { speak, stop, isPlaying, hasVoice } = useSpanishSpeech();
 
   const handleClick = () => {
     if (isPlaying) {
@@ -37,13 +37,16 @@ export function SpanishAudioButton({ text, className = '' }: SpanishAudioButtonP
   return (
     <button
       onClick={handleClick}
-      className={`inline-flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
-        isPlaying ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-400'
+      disabled={isPlaying}
+      className={`inline-flex items-center justify-center p-2 rounded-full transition-colors ${
+        isPlaying
+          ? 'text-indigo-600 dark:text-indigo-400 cursor-not-allowed opacity-70'
+          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
       } ${className}`}
-      title={isPlaying ? 'Stop' : 'Play audio'}
+      title={isPlaying ? 'Playing audio...' : 'Play audio'}
     >
       {isPlaying ? (
-        <Pause className="w-5 h-5" />
+        <Pause className="w-5 h-5 animate-pulse" />
       ) : (
         <Volume2 className="w-5 h-5" />
       )}
