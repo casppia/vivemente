@@ -41,11 +41,32 @@ export function TextGenerator() {
 **Step 1: Generate Spanish Text**
 Generate 2-3 paragraphs about "${topic}" in Spanish, strictly following ${selectedLevel} CEFR level guidelines.
 
-**Step 2: Analyze Grammar**
-After generating the text, analyze ALL words and identify:
+**Step 2: Analyze Grammar - Extract ALL Verbs**
+Your task is to identify and extract ALL verbs from the Spanish text, including all verb forms and tenses.
+
+**Instructions:**
+1. Analyze the provided Spanish text carefully
+2. Identify and extract ALL verbs, including but not limited to:
+   - Infinitives (e.g., aumentar, fomentar, implementar)
+   - Conjugated verbs in all tenses (e.g., han logrado, ha sido, han contribuido)
+   - Compound verb forms (e.g., se han implementado)
+   - Auxiliary verbs (haber, ser, estar when used as auxiliaries)
+   - Reflexive verbs (e.g., se han implementado)
+   - Gerunds and participles when functioning as verbs
+
+**Verb Output format:**
+- List each verb as it appears in the text
+- Include the complete verb form as it appears
+- Include compound forms as complete units (e.g., "han logrado" not separate)
+- Do not modify or conjugate the verbs
+
+**Example:**
+For text containing "han logrado aumentar la productividad"
+Output verbs: ["han logrado", "aumentar"]
+
+Also identify:
 - **Adjectives**: ALL descriptive words that modify nouns (e.g., hermoso, grande, interesante, nuevo)
 - **Nouns**: ALL naming words including people, places, things, and concepts (e.g., casa, felicidad, profesor, ciudad)
-- **Verbs**: ALL action words, linking verbs, and auxiliary verbs in ANY form (e.g., correr, es, tienen, pensando, vivido)
 
 **Step 3: Return JSON Response**
 Return a JSON object with this exact format:
@@ -60,10 +81,10 @@ Return a JSON object with this exact format:
 }
 
 **Important Guidelines:**
-- Ensure grammatical accuracy in part-of-speech identification
-- List each unique word once per category, even if it appears multiple times in the text
-- Consider context when determining parts of speech
-- Include ALL forms: conjugated verbs, plural nouns, gendered adjectives
+- Be thorough and ensure you capture every verb form, regardless of tense, mood, or construction
+- Do not miss any verbal expressions
+- List each unique word/phrase once per category, even if it appears multiple times
+- For compound verbs, include the complete construction
 - Maintain natural flow and coherence in the generated text
 - Use appropriate vocabulary for ${selectedLevel} level
 - Include varied sentence structures
