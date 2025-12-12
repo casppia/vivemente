@@ -171,18 +171,19 @@ export function WordInteractionModal({
         </div>
 
         <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-16rem)]">
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-              Translation
-            </h3>
-            <input
-              type="text"
-              value={wordTranslation}
-              onChange={(e) => setWordTranslation(e.target.value)}
-              placeholder="Enter translation..."
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-            />
-          </div>
+          {wordTranslation && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                Translation
+              </h3>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <Languages className="w-5 h-5 text-gray-400" />
+                <p className="text-lg text-gray-900 dark:text-white font-medium">
+                  {wordTranslation}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-4">
             <button
