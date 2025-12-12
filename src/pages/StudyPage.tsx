@@ -322,25 +322,25 @@ export default function StudyPage() {
         <select
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value as SortOption)}
-          className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+          className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white"
         >
-          <option value="date">Sort by Date</option>
-          <option value="alphabetical">Sort Alphabetically</option>
-          <option value="source">Sort by Source</option>
+          <option value="date" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Sort by Date</option>
+          <option value="alphabetical" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Sort Alphabetically</option>
+          <option value="source" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Sort by Source</option>
         </select>
 
         <select
           value={filterOption}
           onChange={(e) => setFilterOption(e.target.value as FilterOption)}
-          className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+          className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white"
         >
-          <option value="all">All Sources</option>
-          <option value="verbs">Verbs Only</option>
-          <option value="nouns">Nouns Only</option>
-          <option value="adjectives">Adjectives Only</option>
-          <option value="topics">From Topics</option>
-          <option value="generator">From Generator</option>
-          <option value="analyzer">From Analyzer</option>
+          <option value="all" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">All Sources</option>
+          <option value="verbs" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Verbs Only</option>
+          <option value="nouns" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Nouns Only</option>
+          <option value="adjectives" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Adjectives Only</option>
+          <option value="topics" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">From Topics</option>
+          <option value="generator" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">From Generator</option>
+          <option value="analyzer" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">From Analyzer</option>
         </select>
 
         <div className="flex gap-2">
@@ -415,11 +415,11 @@ export default function StudyPage() {
                     <select
                       value={word.generateOptions?.count || 3}
                       onChange={(e) => updateGenerateOptions(word.word, { count: parseInt(e.target.value) })}
-                      className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
+                      className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white"
                     >
-                      <option value="1">1 Example</option>
-                      <option value="3">3 Examples</option>
-                      <option value="5">5 Examples</option>
+                      <option value="1" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">1 Example</option>
+                      <option value="3" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">3 Examples</option>
+                      <option value="5" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">5 Examples</option>
                     </select>
 
                     <button
@@ -459,12 +459,12 @@ export default function StudyPage() {
                       <select
                         value={word.generateOptions.tense}
                         onChange={(e) => updateGenerateOptions(word.word, { tense: e.target.value as TenseOption })}
-                        className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
+                        className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white"
                       >
-                        <option value="all">All Tenses</option>
-                        <option value="present">Present</option>
-                        <option value="past">Past</option>
-                        <option value="future">Future</option>
+                        <option value="all" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">All Tenses</option>
+                        <option value="present" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Present</option>
+                        <option value="past" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Past</option>
+                        <option value="future" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Future</option>
                       </select>
                     </div>
                   </div>

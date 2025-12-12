@@ -389,18 +389,18 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
                       setSettings(prev => ({ ...prev, elevenLabsVoiceId: e.target.value }));
                       setShowSettings(false);
                     }}
-                    className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-white [&>option]:bg-white [&>option]:dark:bg-gray-700 [&>option]:text-gray-900 [&>option]:dark:text-white"
                   >
                     <optgroup label="Female Voices">
                       {getDefaultSpanishVoices().filter(v => v.category === 'female').map(voice => (
-                        <option key={voice.voice_id} value={voice.voice_id}>
+                        <option key={voice.voice_id} value={voice.voice_id} className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                           {voice.name}
                         </option>
                       ))}
                     </optgroup>
                     <optgroup label="Male Voices">
                       {getDefaultSpanishVoices().filter(v => v.category === 'male').map(voice => (
-                        <option key={voice.voice_id} value={voice.voice_id}>
+                        <option key={voice.voice_id} value={voice.voice_id} className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                           {voice.name}
                         </option>
                       ))}
@@ -417,10 +417,10 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
                   <select
                     value={settings.voiceURI}
                     onChange={(e) => setSettings(prev => ({ ...prev, voiceURI: e.target.value }))}
-                    className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-white [&>option]:bg-white [&>option]:dark:bg-gray-700 [&>option]:text-gray-900 [&>option]:dark:text-white"
                   >
                     {voices.map(voice => (
-                      <option key={voice.voiceURI} value={voice.voiceURI}>
+                      <option key={voice.voiceURI} value={voice.voiceURI} className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                         {voice.name} ({voice.lang})
                       </option>
                     ))}

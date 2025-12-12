@@ -137,11 +137,11 @@ Return a JSON object with this exact format:
                     setShowSubjectInfo(e.target.value);
                   }}
                   onBlur={() => setShowSubjectInfo(null)}
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white appearance-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white appearance-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white"
                 >
-                  <option value="">Select a topic</option>
+                  <option value="" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Select a topic</option>
                   {SUBJECTS.map((subject) => (
-                    <option key={subject.value} value={subject.value}>
+                    <option key={subject.value} value={subject.value} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                       {subject.label}
                     </option>
                   ))}
@@ -161,10 +161,10 @@ Return a JSON object with this exact format:
               <select
                 value={selectedLevel}
                 onChange={(e) => setSelectedLevel(e.target.value as any)}
-                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white"
               >
                 {CEFR_LEVELS.map((level) => (
-                  <option key={level.name} value={level.name}>
+                  <option key={level.name} value={level.name} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                     {level.name} - {level.title}
                   </option>
                 ))}

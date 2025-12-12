@@ -155,11 +155,11 @@ export function SpanishCorrectionModal({ isOpen, onClose }: SpanishCorrectionMod
                       <select
                         value={playbackSpeed}
                         onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                        className="bg-gray-700 text-white text-sm rounded px-2 py-1"
+                        className="bg-gray-700 text-white text-sm rounded px-2 py-1 [&>option]:bg-gray-700 [&>option]:text-white"
                       >
-                        <option value={0.5}>0.5x Speed</option>
-                        <option value={0.75}>0.75x Speed</option>
-                        <option value={1}>Normal Speed</option>
+                        <option value={0.5} className="bg-gray-700 text-white">0.5x Speed</option>
+                        <option value={0.75} className="bg-gray-700 text-white">0.75x Speed</option>
+                        <option value={1} className="bg-gray-700 text-white">Normal Speed</option>
                       </select>
                       <button
                         onClick={togglePlayback}

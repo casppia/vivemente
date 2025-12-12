@@ -20,15 +20,19 @@ export function LanguageSelector() {
         <select
           value={targetLanguage}
           onChange={(e) => setTargetLanguage(e.target.value as TargetLanguage)}
-          className="pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white appearance-none cursor-pointer"
+          className="pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white"
         >
           {languages.map((lang) => (
-            <option key={lang.code} value={lang.code}>
+            <option
+              key={lang.code}
+              value={lang.code}
+              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
               {lang.name}
             </option>
           ))}
         </select>
-        <Globe2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400" />
+        <Globe2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400 pointer-events-none" />
       </div>
 
       <button

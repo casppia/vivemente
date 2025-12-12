@@ -750,7 +750,7 @@ export function ComparisonDrill() {
                                 value={topic.userAnswers[index]}
                                 onChange={(e) => handleAnswerChange(topic.id, index, e.target.value)}
                                 disabled={topic.showResults}
-                                className={`mx-1 px-2 py-1 rounded border ${
+                                className={`mx-1 px-2 py-1 rounded border text-gray-900 dark:text-white [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white ${
                                   topic.showResults
                                     ? topic.userAnswers[index].toLowerCase() === sentence.correctAnswer.toLowerCase()
                                       ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
@@ -758,9 +758,9 @@ export function ComparisonDrill() {
                                     : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                                 }`}
                               >
-                                <option value="">Select...</option>
+                                <option value="" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Select...</option>
                                 {sentence.options.map((option) => (
-                                  <option key={option} value={option}>
+                                  <option key={option} value={option} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                     {option}
                                   </option>
                                 ))}
