@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, Pause, Settings2, X } from 'lucide-react';
+import { Volume2, Pause, Settings2, X, Loader2 } from 'lucide-react';
 import { generateSpeech, isElevenLabsAvailable, getDefaultSpanishVoices } from '../utils/elevenLabs';
 
 interface SpanishAudioPlayerProps {
@@ -33,19 +33,27 @@ class AudioPlayerInstance {
   private utterance: SpeechSynthesisUtterance | null = null;
   private audioElement: HTMLAudioElement | null = null;
   private isPlaying = false;
+  private isLoading = false;
   private onPlayStateChange: (isPlaying: boolean) => void;
+  private onLoadingStateChange: (isLoading: boolean) => void;
 
-  constructor(onPlayStateChange: (isPlaying: boolean) => void) {
+  constructor(
+    onPlayStateChange: (isPlaying: boolean) => void,
+    onLoadingStateChange: (isLoading: boolean) => void
+  ) {
     this.onPlayStateChange = onPlayStateChange;
+    this.onLoadingStateChange = onLoadingStateChange;
   }
 
   async play(text: string, voice: SpeechSynthesisVoice | null, settings: SpeechSettings) {
-    if (this.isPlaying) {
+    if (this.isPlaying || this.isLoading) {
       this.stop();
       return;
     }
 
     audioManager.setCurrentPlayer(this);
+    this.isLoading = true;
+    this.onLoadingStateChange(true);
 
     // Try ElevenLabs first if available
     if (isElevenLabsAvailable()) {
@@ -54,6 +62,8 @@ class AudioPlayerInstance {
         const audioBlob = await generateSpeech(text, settings.elevenLabsVoiceId);
         if (audioBlob) {
           console.log('Playing ElevenLabs audio');
+          this.isLoading = false;
+          this.onLoadingStateChange(false);
           this.playAudioBlob(audioBlob, settings.volume);
           return;
         } else {
@@ -67,6 +77,8 @@ class AudioPlayerInstance {
     }
 
     // Fallback to Web Speech API
+    this.isLoading = false;
+    this.onLoadingStateChange(false);
     this.playSpeechSynthesis(text, voice, settings);
   }
 
@@ -138,15 +150,25 @@ class AudioPlayerInstance {
       this.audioElement.pause();
       this.audioElement = null;
       this.isPlaying = false;
+      this.isLoading = false;
       this.onPlayStateChange(false);
+      this.onLoadingStateChange(false);
       audioManager.setCurrentPlayer(null);
     }
 
     if (this.utterance) {
       window.speechSynthesis.cancel();
       this.isPlaying = false;
+      this.isLoading = false;
       this.utterance = null;
       this.onPlayStateChange(false);
+      this.onLoadingStateChange(false);
+      audioManager.setCurrentPlayer(null);
+    }
+
+    if (this.isLoading) {
+      this.isLoading = false;
+      this.onLoadingStateChange(false);
       audioManager.setCurrentPlayer(null);
     }
   }
@@ -154,6 +176,7 @@ class AudioPlayerInstance {
 
 export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [settings, setSettings] = useState<SpeechSettings>({
     rate: 0.9,
@@ -169,7 +192,10 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
 
   // Initialize the player
   useEffect(() => {
-    playerRef.current = new AudioPlayerInstance((playing) => setIsPlaying(playing));
+    playerRef.current = new AudioPlayerInstance(
+      (playing) => setIsPlaying(playing),
+      (loading) => setIsLoading(loading)
+    );
     return () => {
       if (playerRef.current) {
         playerRef.current.stop();
@@ -274,7 +300,7 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
       .trim();
 
     if (playerRef.current) {
-      if (isPlaying) {
+      if (isPlaying || isLoading) {
         playerRef.current.stop();
       } else {
         isProcessingRef.current = true;
@@ -285,24 +311,34 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
         }, 300);
       }
     }
-  }, [isVoicesLoaded, voices, settings, text, isPlaying]);
+  }, [isVoicesLoaded, voices, settings, text, isPlaying, isLoading]);
 
   return (
     <div className="relative inline-block">
       <div className="flex items-center gap-2">
         <button
           onClick={togglePlayPause}
-          disabled={!isVoicesLoaded}
+          disabled={!isVoicesLoaded || isLoading}
           className={`inline-flex items-center justify-center p-2 rounded-full transition-colors ${
-            !isVoicesLoaded
+            !isVoicesLoaded || isLoading
               ? 'opacity-50 cursor-not-allowed text-gray-600 dark:text-gray-400'
               : isPlaying
               ? 'text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
           } ${className}`}
-          title={isPlaying ? 'Pause audio' : !isVoicesLoaded ? 'Loading voices...' : 'Play audio'}
+          title={
+            isLoading
+              ? 'Generating audio...'
+              : isPlaying
+              ? 'Pause audio'
+              : !isVoicesLoaded
+              ? 'Loading voices...'
+              : 'Play audio'
+          }
         >
-          {isPlaying ? (
+          {isLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : isPlaying ? (
             <Pause className="w-5 h-5" />
           ) : (
             <Volume2 className="w-5 h-5" />
