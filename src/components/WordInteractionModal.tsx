@@ -4,6 +4,7 @@ import { X, BookmarkPlus, RefreshCw, Languages } from 'lucide-react';
 import { useWordStore } from '../store/useWordStore';
 import { generateText } from '../utils/openai';
 import { SpanishAudioPlayer } from './SpanishAudioPlayer';
+import { wordToIPA } from '../utils/ipaTranscription';
 import { CEFRLevel } from '../types/level';
 
 interface Example {
@@ -141,12 +142,15 @@ export function WordInteractionModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 rounded-t-xl border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between p-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {word}
-              </h2>
-              <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-start justify-between p-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  {word}
+                </h2>
+                <SpanishAudioPlayer text={word} />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
                 <span className={`text-sm px-2 py-0.5 rounded ${
                   type === 'verb'
                     ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
@@ -160,10 +164,13 @@ export function WordInteractionModal({
                   {level}
                 </span>
               </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                {wordToIPA(word)}
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 ml-4"
             >
               <X className="w-5 h-5" />
             </button>
