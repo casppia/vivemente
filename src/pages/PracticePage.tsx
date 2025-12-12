@@ -3,57 +3,40 @@ import { motion } from 'framer-motion';
 import { CEFR_LEVELS } from '../types/level';
 import { LEVEL_TENSES } from '../types/practice';
 import { ConjugationPractice } from '../components/ConjugationPractice';
-import { TenseTheory } from '../components/TenseTheory';
 
 export function PracticePage() {
   const [selectedLevel, setSelectedLevel] = useState(CEFR_LEVELS[0].name);
-  const [showTheory, setShowTheory] = useState(true);
 
-  // Get tenses applicable for the selected level
   const applicableTenses = LEVEL_TENSES[selectedLevel];
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Conjugation Practice
         </h1>
-        <button
-          onClick={() => setShowTheory(!showTheory)}
-          className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
-        >
-          {showTheory ? 'Hide Theory' : 'Show Theory'}
-        </button>
+        <p className="text-gray-600 dark:text-gray-400">
+          Select your level and practice verb conjugations. Hover over tense names for detailed explanations.
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
         {CEFR_LEVELS.map((level) => (
           <motion.button
             key={level.name}
             whileTap={{ scale: 0.95 }}
             onClick={() => setSelectedLevel(level.name)}
-            className={`p-3 rounded-lg text-center transition-colors ${
+            className={`p-4 rounded-xl text-center transition-all shadow-sm hover:shadow-md ${
               selectedLevel === level.name
-                ? `bg-${level.color}-600 text-white`
-                : `bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 
-                   hover:bg-${level.color}-100 dark:hover:bg-${level.color}-900/20`
+                ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-lg scale-105'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750 border border-gray-200 dark:border-gray-700'
             }`}
           >
             <span className="block text-lg font-bold">{level.name}</span>
-            <span className="block text-sm mt-1">{level.title}</span>
+            <span className="block text-xs mt-1 opacity-90">{level.title}</span>
           </motion.button>
         ))}
       </div>
-
-      {showTheory && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <TenseTheory level={selectedLevel} />
-        </motion.div>
-      )}
 
       <div className="space-y-6">
         {applicableTenses.map((tense) => (

@@ -6,6 +6,7 @@ import { generateText } from '../utils/openai';
 import { useWordStore } from '../store/useWordStore';
 import { usePracticeStore } from '../store/usePracticeStore';
 import { getTensePrompt } from '../utils/tensePrompts';
+import { TenseTooltip } from './TenseTooltip';
 
 interface Props {
   level: string;
@@ -140,16 +141,14 @@ export function ConjugationPractice({ level, tense }: Props) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {tense.name}
-          </h3>
-          <div className="flex items-center gap-4 mt-2">
+        <div className="flex-1">
+          <TenseTooltip tenseName={tense.name} description={tense.description} />
+          <div className="flex items-center gap-4 mt-3">
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium">Practiced:</span>
-              <span className="bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded">
+              <span className="bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded-md">
                 {stats.practiceCount} times
               </span>
             </div>
@@ -164,13 +163,23 @@ export function ConjugationPractice({ level, tense }: Props) {
         <button
           onClick={generatePractice}
           disabled={loading}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-6 py-3 rounded-lg text-sm font-medium transition-all transform hover:scale-105 active:scale-95 ${
             loading
-              ? 'bg-gray-100 dark:bg-gray-700 text-gray-500'
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white shadow-md hover:shadow-lg'
           }`}
         >
-          {loading ? 'Generating...' : 'Practice'}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Generating...
+            </span>
+          ) : (
+            'Start Practice'
+          )}
         </button>
       </div>
 
