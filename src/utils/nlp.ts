@@ -1,6 +1,7 @@
 import winkNLP from 'wink-nlp';
 import model from 'wink-eng-lite-web-model';
 import { generateText } from './openai';
+import { AnalyzedWord as AnalyzedWordType } from '../types/text';
 
 // Initialize winkNLP with error handling
 let nlp: any;
@@ -92,24 +93,8 @@ const commonWords = {
   ])
 };
 
-export interface AnalyzedWord {
-  text: string;
-  type: 'verb' | 'noun' | 'adjective' | 'adverb' | 'preposition' | 'determiner' | 'pronoun' | 'other';
-  lemma: string;
-  translation?: string;
-  features: {
-    pos: string;
-    isNegated?: boolean;
-    isQuestion?: boolean;
-    gender?: 'masculine' | 'feminine' | 'neutral';
-    number?: 'singular' | 'plural';
-    person?: 'first' | 'second' | 'third';
-    tense?: string;
-    mood?: string;
-    degree?: 'positive' | 'comparative' | 'superlative';
-    definition?: string;
-  };
-}
+// Re-export AnalyzedWord from types/text for backwards compatibility
+export type AnalyzedWord = AnalyzedWordType;
 
 export interface SentenceAnalysis {
   text: string;
@@ -166,7 +151,7 @@ class SpanishAnalyzer {
     }
   }
 
-  private getVerbFeatures(word: string): Partial<AnalyzedWord['features']> {
+  private getVerbFeatures(word: string): AnalyzedWord['features'] {
     const normalized = word.toLowerCase();
     const features: AnalyzedWord['features'] = { pos: 'verb' };
 
@@ -197,7 +182,7 @@ class SpanishAnalyzer {
     return features;
   }
 
-  private getNounFeatures(word: string): Partial<AnalyzedWord['features']> {
+  private getNounFeatures(word: string): AnalyzedWord['features'] {
     const normalized = word.toLowerCase();
     const features: AnalyzedWord['features'] = { pos: 'noun' };
 
@@ -215,7 +200,7 @@ class SpanishAnalyzer {
     return features;
   }
 
-  private getAdjectiveFeatures(word: string): Partial<AnalyzedWord['features']> {
+  private getAdjectiveFeatures(word: string): AnalyzedWord['features'] {
     const normalized = word.toLowerCase();
     const features: AnalyzedWord['features'] = { pos: 'adjective' };
 
@@ -247,7 +232,7 @@ class SpanishAnalyzer {
     // Check common irregular verbs first
     if (type === 'verb') {
       if (normalized in commonWords.verbs) {
-        return commonWords.verbs[normalized];
+        return commonWords.verbs[normalized as keyof typeof commonWords.verbs];
       }
 
       // Handle regular verb patterns
