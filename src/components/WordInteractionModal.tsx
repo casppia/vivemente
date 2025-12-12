@@ -252,8 +252,13 @@ export function WordInteractionModal({
                     className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-gray-900 dark:text-white">{example.spanish}</p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <p className="text-gray-900 dark:text-white mb-1">{example.spanish}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                          {wordToIPA(example.spanish)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
                         <button
                           onClick={() => toggleTranslation(index)}
                           className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
