@@ -5,6 +5,7 @@ import { VerbTense, PracticeSentence } from '../types/practice';
 import { generateText } from '../utils/openai';
 import { useWordStore } from '../store/useWordStore';
 import { usePracticeStore } from '../store/usePracticeStore';
+import { getTensePrompt } from '../utils/tensePrompts';
 
 interface Props {
   level: string;
@@ -41,59 +42,34 @@ export function ConjugationPractice({ level, tense }: Props) {
     setShowSaveDialog(null);
 
     try {
-      const prompt = `Generate 5 Spanish sentences for conjugation practice at ${level} level using the ${tense.name} tense.
-      For each sentence:
-      - Leave a blank space where the conjugated verb should go
-      - Include the infinitive form in parentheses
-      - Provide clear context clues
-      - Use different subjects (yo, tú, él/ella, nosotros, ellos)
-      - Mix statements, questions, and negatives
-      - Keep vocabulary appropriate for ${level} level
-      - Include the proper IPA (International Phonetic Alphabet) transcription for the complete sentence (with the blank filled in with the correct verb form)
-      - Use standard IPA symbols in brackets [like this] for Spanish pronunciation
-
-      IMPORTANT: For IPA transcription, use proper IPA symbols:
-      - Use [b] [d] [g] for stops, [β] [ð] [ɣ] for fricatives
-      - Use [ɾ] for tap r, [r] for trill rr
-      - Use [ʎ] for ll, [ɲ] for ñ
-      - Use [x] for j/g (before e,i)
-      - Use [θ] for c/z (in Castilian) or [s] (in Latin American)
-      - Mark stress with ˈ before stressed syllable
-      - Enclose entire transcription in square brackets [...]
-
-      Return the response as a JSON array with this format:
-      {
-        "spanish": "¿_____ (ir) tú al mercado mañana?",
-        "english": "Are you going to the market tomorrow?",
-        "ipa": "[ˈbas tu al meɾˈkaðo maˈɲana]",
-        "verb": {
-          "infinitive": "ir",
-          "correctForm": "vas",
-          "subject": "tú",
-          "tense": "Present Simple"
-        },
-        "context": "Asking about future plans using present tense"
-      }
-
-      Return ONLY a JSON array of 5 practice sentences, no other text.`;
+      const prompt = getTensePrompt(tense.name, level);
 
       const response = await generateText(prompt, {
-        model: 'gpt-3.5-turbo',
-        maxTokens: 1000,
+        model: 'gpt-4',
+        maxTokens: 1500,
         temperature: 0.7,
       });
 
       // Parse and validate the response
       const practiceData = JSON.parse(response) as PracticeSentence[];
-      
-      // Validate that each sentence has the required verb subject
-      const validatedData = practiceData.map(sentence => {
+
+      // Validate that each sentence has the required verb subject and correct tense
+      const validatedData = practiceData.map((sentence, index) => {
         if (!sentence.verb.subject) {
           console.error('Missing subject in verb data:', sentence);
           throw new Error('Invalid API response: missing verb subject');
         }
+
+        if (!sentence.verb.tense || !sentence.verb.tense.toLowerCase().includes(tense.name.toLowerCase().split(' ')[0])) {
+          console.warn(`Sentence ${index + 1} may not use ${tense.name}:`, sentence);
+        }
+
         return sentence;
       });
+
+      if (validatedData.length !== 5) {
+        throw new Error(`Expected 5 sentences, but received ${validatedData.length}`);
+      }
 
       setSentences(validatedData);
       setUserAnswers(new Array(validatedData.length).fill(''));
