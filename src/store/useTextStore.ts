@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Subject, Word, GeneratedText } from '../types/text';
+import { Subject, Word, GeneratedText, WordType } from '../types/text';
 import { CEFRLevel } from '../types/level';
 import { generateText } from '../utils/openai';
 import { spanishAnalyzer } from '../utils/nlp';
@@ -43,13 +43,37 @@ export const useTextStore = create<TextState>()(
         try {
           const response = await generateText(prompt, {
             model: 'gpt-3.5-turbo',
-            maxTokens: 1000,
+            maxTokens: 1500,
             temperature: 0.7,
           });
 
           const initialData = JSON.parse(response);
 
-          // Analyze each paragraph
+          // Check if grammar analysis is provided by AI
+          let verbs: string[] = [];
+          let nouns: string[] = [];
+          let adjectives: string[] = [];
+
+          if (initialData.grammar) {
+            // Use AI-provided grammar analysis
+            verbs = Array.isArray(initialData.grammar.verbs) ? initialData.grammar.verbs : [];
+            nouns = Array.isArray(initialData.grammar.nouns) ? initialData.grammar.nouns : [];
+            adjectives = Array.isArray(initialData.grammar.adjectives) ? initialData.grammar.adjectives : [];
+          } else {
+            // Fallback to local analysis if AI doesn't provide grammar
+            const analyzedParagraphs = await Promise.all(
+              initialData.spanish.map(async (text: string) => {
+                const analysis = await spanishAnalyzer.analyzeSentence(text);
+                return analysis;
+              })
+            );
+            const allWords = analyzedParagraphs.flatMap(analysis => analysis.words);
+            verbs = allWords.filter(w => w.type === 'verb').map(w => w.text);
+            nouns = allWords.filter(w => w.type === 'noun').map(w => w.text);
+            adjectives = allWords.filter(w => w.type === 'adjective').map(w => w.text);
+          }
+
+          // Analyze paragraphs for word-level details
           const analyzedParagraphs = await Promise.all(
             initialData.spanish.map(async (text: string) => {
               const analysis = await spanishAnalyzer.analyzeSentence(text);
@@ -57,24 +81,29 @@ export const useTextStore = create<TextState>()(
             })
           );
 
-          // Combine all words from analysis
+          // Combine all words from analysis for word tooltips
           const allWords = analyzedParagraphs.flatMap(analysis => analysis.words);
 
-          // Create the final text object
+          // Create the final text object with analyzed words by paragraph
           const finalText: GeneratedText = {
             spanish: initialData.spanish,
             english: initialData.english,
-            words: allWords.map(word => ({
-              text: word.text,
-              type: word.type,
-              definition: word.features?.definition || '',
-              translation: word.translation || '',
-              context: `Used at ${get().selectedLevel} level`,
-            })),
+            words: allWords,  // Keep AnalyzedWord[] for tooltip functionality
+            wordsByParagraph: analyzedParagraphs.map(analysis => analysis.words),
+            savedWords: allWords
+              .filter(w => w.type === 'verb' || w.type === 'noun' || w.type === 'adjective')
+              .map(word => ({
+                text: word.text,
+                type: word.type as WordType,
+                definition: word.features?.definition || '',
+                translation: word.translation || '',
+                context: `Used at ${get().selectedLevel} level`,
+                timestamp: Date.now(),
+              })),
             analysis: {
-              verbs: allWords.filter(w => w.type === 'verb').map(w => w.text),
-              nouns: allWords.filter(w => w.type === 'noun').map(w => w.text),
-              adjectives: allWords.filter(w => w.type === 'adjective').map(w => w.text),
+              verbs,
+              nouns,
+              adjectives,
             },
           };
 

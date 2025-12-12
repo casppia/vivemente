@@ -257,10 +257,31 @@ export interface Word {
   timestamp: number;
 }
 
+export interface AnalyzedWord {
+  text: string;
+  type: 'verb' | 'noun' | 'adjective' | 'adverb' | 'preposition' | 'determiner' | 'pronoun' | 'other';
+  lemma: string;
+  translation?: string;
+  features: {
+    pos: string;
+    isNegated?: boolean;
+    isQuestion?: boolean;
+    gender?: 'masculine' | 'feminine' | 'neutral';
+    number?: 'singular' | 'plural';
+    person?: 'first' | 'second' | 'third';
+    tense?: string;
+    mood?: string;
+    degree?: 'positive' | 'comparative' | 'superlative';
+    definition?: string;
+  };
+}
+
 export interface GeneratedText {
   spanish: string[];
   english: string[];
-  words: Word[];
+  words: AnalyzedWord[];
+  wordsByParagraph?: AnalyzedWord[][];
+  savedWords?: Word[];
   analysis: {
     verbs: string[];
     nouns: string[];

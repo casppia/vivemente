@@ -36,21 +36,39 @@ export function TextGenerator() {
     if (selectedSubjectData?.promptTemplate) {
       prompt = selectedSubjectData.promptTemplate.replace('{level}', selectedLevel);
     } else {
-      prompt = `Generate 2-3 paragraphs about ${topic} in Spanish strictly following ${selectedLevel} CEFR level guidelines.
+      prompt = `You are a Spanish language text generator and grammar analyzer. Follow these steps:
 
-      Return the response as a JSON object with this format:
-      {
-        "spanish": ["paragraph1", "paragraph2"],
-        "english": ["translation1", "translation2"]
-      }
+**Step 1: Generate Spanish Text**
+Generate 2-3 paragraphs about "${topic}" in Spanish, strictly following ${selectedLevel} CEFR level guidelines.
 
-      Requirements:
-      - Maintain natural flow and coherence
-      - Use appropriate vocabulary for ${selectedLevel} level
-      - Ensure grammatical accuracy
-      - Include varied sentence structures
-      - Focus on positive aspects and developments
-      - Return ONLY the JSON object, no other text`;
+**Step 2: Analyze Grammar**
+After generating the text, analyze ALL words and identify:
+- **Adjectives**: ALL descriptive words that modify nouns (e.g., hermoso, grande, interesante, nuevo)
+- **Nouns**: ALL naming words including people, places, things, and concepts (e.g., casa, felicidad, profesor, ciudad)
+- **Verbs**: ALL action words, linking verbs, and auxiliary verbs in ANY form (e.g., correr, es, tienen, pensando, vivido)
+
+**Step 3: Return JSON Response**
+Return a JSON object with this exact format:
+{
+  "spanish": ["paragraph1", "paragraph2"],
+  "english": ["translation1", "translation2"],
+  "grammar": {
+    "adjectives": ["adjective1", "adjective2", ...],
+    "nouns": ["noun1", "noun2", ...],
+    "verbs": ["verb1", "verb2", ...]
+  }
+}
+
+**Important Guidelines:**
+- Ensure grammatical accuracy in part-of-speech identification
+- List each unique word once per category, even if it appears multiple times in the text
+- Consider context when determining parts of speech
+- Include ALL forms: conjugated verbs, plural nouns, gendered adjectives
+- Maintain natural flow and coherence in the generated text
+- Use appropriate vocabulary for ${selectedLevel} level
+- Include varied sentence structures
+- Focus on positive aspects and developments
+- Return ONLY the JSON object, no other text`;
     }
 
     await generateContent(prompt);
@@ -181,7 +199,13 @@ export function TextGenerator() {
             verbs: generatedText.analysis.verbs.length,
             nouns: generatedText.analysis.nouns.length,
             adjectives: generatedText.analysis.adjectives.length,
-            total: generatedText.words.length,
+            total: generatedText.words.filter(w =>
+              w.type === 'verb' || w.type === 'noun' || w.type === 'adjective' ||
+              w.type === 'adverb' || w.type === 'preposition'
+            ).length,
+            verbsList: generatedText.analysis.verbs,
+            nounsList: generatedText.analysis.nouns,
+            adjectivesList: generatedText.analysis.adjectives,
           }} />
           
           {generatedText.spanish.map((paragraph, index) => (
