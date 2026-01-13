@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Clock } from 'lucide-react';
+import { RefreshCw, Clock, Volume2, Loader2 } from 'lucide-react';
 import { VerbTense, PracticeSentence } from '../types/practice';
 import { generateText } from '../utils/openai';
 import { useWordStore } from '../store/useWordStore';
 import { usePracticeStore } from '../store/usePracticeStore';
 import { getTensePrompt } from '../utils/tensePrompts';
 import { TenseTooltip } from './TenseTooltip';
+import { generateSpeech, isElevenLabsAvailable, getDefaultSpanishVoices } from '../utils/elevenLabs';
 
 interface Props {
   level: string;
@@ -20,9 +21,12 @@ export function ConjugationPractice({ level, tense }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState<{ index: number; verb: string; subject: string } | null>(null);
+  const [audioLoading, setAudioLoading] = useState<{ [key: number]: boolean }>({});
+  const [audioUrls, setAudioUrls] = useState<{ [key: number]: string }>({});
   const { addWord, savedWords } = useWordStore();
   const { incrementPracticeCount, getPracticeStats } = usePracticeStore();
   const stats = getPracticeStats(tense.name);
+  const hasElevenLabs = isElevenLabsAvailable();
 
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return 'Never';
@@ -41,6 +45,8 @@ export function ConjugationPractice({ level, tense }: Props) {
     setUserAnswers([]);
     setShowResults(false);
     setShowSaveDialog(null);
+    setAudioUrls({});
+    setAudioLoading({});
 
     try {
       const prompt = getTensePrompt(tense.name, level);
@@ -51,10 +57,8 @@ export function ConjugationPractice({ level, tense }: Props) {
         temperature: 0.7,
       });
 
-      // Parse and validate the response
       const practiceData = JSON.parse(response) as PracticeSentence[];
 
-      // Validate that each sentence has the required verb subject and correct tense
       const validatedData = practiceData.map((sentence, index) => {
         if (!sentence.verb.subject) {
           console.error('Missing subject in verb data:', sentence);
@@ -114,17 +118,15 @@ export function ConjugationPractice({ level, tense }: Props) {
 
   const confirmSaveVerb = () => {
     if (!showSaveDialog) return;
-    
+
     const sentence = sentences[showSaveDialog.index];
-    
-    // Validate subject presence before saving
+
     if (!sentence.verb.subject) {
       console.error('Missing subject during save:', sentence);
       setError('Cannot save verb: missing subject information');
       return;
     }
 
-    // Save the verb with its subject
     addWord({
       word: sentence.verb.correctForm,
       type: 'verb',
@@ -138,6 +140,34 @@ export function ConjugationPractice({ level, tense }: Props) {
     });
 
     setShowSaveDialog(null);
+  };
+
+  const playAudio = async (index: number) => {
+    if (audioUrls[index]) {
+      const audio = new Audio(audioUrls[index]);
+      audio.play();
+      return;
+    }
+
+    setAudioLoading({ ...audioLoading, [index]: true });
+
+    try {
+      const sentence = sentences[index];
+      const fullSentence = sentence.spanish.replace('_____', sentence.verb.correctForm);
+      const voices = getDefaultSpanishVoices();
+      const blob = await generateSpeech(fullSentence, voices[0].voice_id);
+
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        setAudioUrls({ ...audioUrls, [index]: url });
+        const audio = new Audio(url);
+        audio.play();
+      }
+    } catch (err) {
+      console.error('Error playing audio:', err);
+    } finally {
+      setAudioLoading({ ...audioLoading, [index]: false });
+    }
   };
 
   return (
@@ -201,24 +231,40 @@ export function ConjugationPractice({ level, tense }: Props) {
               <div key={index} className="space-y-2">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <p className="text-gray-900 dark:text-white">
-                      {sentence.spanish.split('_____')[0]}
-                      <input
-                        type="text"
-                        value={userAnswers[index]}
-                        onChange={(e) => handleAnswerChange(index, e.target.value)}
-                        disabled={showResults}
-                        className={`w-32 px-2 py-1 mx-1 rounded border ${
-                          showResults
-                            ? userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase()
-                              ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                              : 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                        }`}
-                        placeholder={`(${sentence.verb.infinitive})`}
-                      />
-                      {sentence.spanish.split('_____')[1]}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-gray-900 dark:text-white flex-1">
+                        {sentence.spanish.split('_____')[0]}
+                        <input
+                          type="text"
+                          value={userAnswers[index]}
+                          onChange={(e) => handleAnswerChange(index, e.target.value)}
+                          disabled={showResults}
+                          className={`w-32 px-2 py-1 mx-1 rounded border ${
+                            showResults
+                              ? userAnswers[index].toLowerCase() === sentence.verb.correctForm.toLowerCase()
+                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                : 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                          }`}
+                          placeholder={`(${sentence.verb.infinitive})`}
+                        />
+                        {sentence.spanish.split('_____')[1]}
+                      </p>
+                      {hasElevenLabs && showResults && (
+                        <button
+                          onClick={() => playAudio(index)}
+                          disabled={audioLoading[index]}
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50"
+                          title="Listen to pronunciation"
+                        >
+                          {audioLoading[index] ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Volume2 className="w-5 h-5" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                     <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                       {sentence.english}
                     </p>
