@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Volume2, Mic, StopCircle, RefreshCw, VolumeX, Play, Pause } from 'lucide-react';
+import { Volume2, Mic, StopCircle, RefreshCw, VolumeX, Play, Pause, Loader2 } from 'lucide-react';
 import RecordRTC from 'recordrtc';
 import { generateText } from '../utils/openai';
+import { generateSpeech, isElevenLabsAvailable, getDefaultSpanishVoices } from '../utils/elevenLabs';
 
 interface SpanishCorrectionModalProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ export function SpanishCorrectionModal({ isOpen, onClose }: SpanishCorrectionMod
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const hasElevenLabs = isElevenLabsAvailable();
 
   const handleSubmit = async () => {
     if (!inputText.trim()) {
@@ -61,35 +65,72 @@ export function SpanishCorrectionModal({ isOpen, onClose }: SpanishCorrectionMod
     }
   };
 
-  const playAudio = (text: string, speed: number = 1) => {
-    if (!window.speechSynthesis) {
-      setError('Speech synthesis is not supported in your browser');
+  const playAudio = async (text: string) => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audio.onended = () => setIsPlaying(false);
+      setIsPlaying(true);
+      audio.play();
       return;
     }
 
-    window.speechSynthesis.cancel();
+    setAudioLoading(true);
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'es-MX';
-    utterance.rate = speed;
+    try {
+      if (hasElevenLabs) {
+        // Use ElevenLabs with Mexican female voice (Charlotte)
+        const voices = getDefaultSpanishVoices();
+        const mexicanVoice = voices.find(v => v.name.includes('Charlotte')) || voices[0];
+        const blob = await generateSpeech(text, mexicanVoice.voice_id);
 
-    const voices = window.speechSynthesis.getVoices();
-    const spanishVoice = voices.find(voice => 
-      voice.lang === 'es-MX' || voice.lang === 'es-ES' || voice.lang.startsWith('es')
-    );
-    
-    if (spanishVoice) {
-      utterance.voice = spanishVoice;
-    }
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          setAudioUrl(url);
+          const audio = new Audio(url);
+          audio.onended = () => setIsPlaying(false);
+          setIsPlaying(true);
+          audio.play();
+          setAudioLoading(false);
+          return;
+        }
+      }
 
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => {
-      setIsPlaying(false);
+      // Fallback to Web Speech API
+      if (!window.speechSynthesis) {
+        setError('Speech synthesis is not supported in your browser');
+        setAudioLoading(false);
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-MX';
+      utterance.rate = playbackSpeed;
+
+      const voices = window.speechSynthesis.getVoices();
+      const spanishVoice = voices.find(voice =>
+        voice.lang === 'es-MX' || voice.lang === 'es-ES' || voice.lang.startsWith('es')
+      );
+
+      if (spanishVoice) {
+        utterance.voice = spanishVoice;
+      }
+
+      utterance.onstart = () => setIsPlaying(true);
+      utterance.onend = () => setIsPlaying(false);
+      utterance.onerror = () => {
+        setIsPlaying(false);
+        setError('Error playing audio');
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.error('Error playing audio:', err);
       setError('Error playing audio');
-    };
-
-    window.speechSynthesis.speak(utterance);
+    } finally {
+      setAudioLoading(false);
+    }
   };
 
   const stopAudio = () => {
@@ -99,11 +140,11 @@ export function SpanishCorrectionModal({ isOpen, onClose }: SpanishCorrectionMod
 
   const togglePlayback = () => {
     if (!correction) return;
-    
+
     if (isPlaying) {
       stopAudio();
     } else {
-      playAudio(correction.correctedText, playbackSpeed);
+      playAudio(correction.correctedText);
     }
   };
 
@@ -152,20 +193,26 @@ export function SpanishCorrectionModal({ isOpen, onClose }: SpanishCorrectionMod
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-medium text-gray-400">Corrected Text</h3>
                     <div className="flex items-center gap-2">
-                      <select
-                        value={playbackSpeed}
-                        onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                        className="bg-gray-700 text-white text-sm rounded px-2 py-1 [&>option]:bg-gray-700 [&>option]:text-white"
-                      >
-                        <option value={0.5} className="bg-gray-700 text-white">0.5x Speed</option>
-                        <option value={0.75} className="bg-gray-700 text-white">0.75x Speed</option>
-                        <option value={1} className="bg-gray-700 text-white">Normal Speed</option>
-                      </select>
+                      {!hasElevenLabs && (
+                        <select
+                          value={playbackSpeed}
+                          onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+                          className="bg-gray-700 text-white text-sm rounded px-2 py-1 [&>option]:bg-gray-700 [&>option]:text-white"
+                        >
+                          <option value={0.5} className="bg-gray-700 text-white">0.5x Speed</option>
+                          <option value={0.75} className="bg-gray-700 text-white">0.75x Speed</option>
+                          <option value={1} className="bg-gray-700 text-white">Normal Speed</option>
+                        </select>
+                      )}
                       <button
                         onClick={togglePlayback}
-                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        disabled={audioLoading}
+                        className="p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                        title="Listen to pronunciation"
                       >
-                        {isPlaying ? (
+                        {audioLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : isPlaying ? (
                           <Pause className="w-5 h-5" />
                         ) : (
                           <Play className="w-5 h-5" />

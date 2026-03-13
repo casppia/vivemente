@@ -183,7 +183,7 @@ export function SpanishAudioPlayer({ text, className = '' }: SpanishAudioPlayerP
     pitch: 1.0,
     volume: 1.0,
     voiceURI: '',
-    elevenLabsVoiceId: getDefaultSpanishVoices()[1]?.voice_id || ''
+    elevenLabsVoiceId: getDefaultSpanishVoices()[0]?.voice_id || '' // Charlotte - Female (Mexico)
   });
   const [showSettings, setShowSettings] = useState(false);
   const [error, setError] = useState<string | null>(null);
