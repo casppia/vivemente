@@ -155,7 +155,7 @@ export function ConjugationPractice({ level, tense }: Props) {
       const sentence = sentences[index];
       const fullSentence = sentence.spanish.replace('_____', sentence.verb.correctForm);
       const voices = getDefaultSpanishVoices();
-      const blob = await generateSpeech(fullSentence, voices[0].voice_id);
+      const blob = await generateSpeech(fullSentence, voices[1].voice_id); // Adam - Male (Mexico)
 
       if (blob) {
         const url = URL.createObjectURL(blob);
