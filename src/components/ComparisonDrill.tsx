@@ -1,35 +1,24 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw, BookOpen, Dumbbell, CheckCircle, XCircle, ChevronRight, Sparkles, AlertCircle } from 'lucide-react';
 import { generateText } from '../utils/openai';
 import { SpanishAudioPlayer } from './SpanishAudioPlayer';
 import { textToIPA } from '../utils/ipaTranscription';
 import topicWords from '../data/words_by_topic.json';
 
-// Helper function to get random words from topics
 function getRandomWords(count: number = 2): string[] {
   const allTopics = Object.values(topicWords).flat();
   const words: string[] = [];
-  
   while (words.length < count) {
     const randomWord = allTopics[Math.floor(Math.random() * allTopics.length)];
-    if (!words.includes(randomWord)) {
-      words.push(randomWord);
-    }
+    if (!words.includes(randomWord)) words.push(randomWord);
   }
-  
   return words;
 }
 
 interface ComparisonPair {
-  first: {
-    spanish: string;
-    english: string;
-  };
-  second: {
-    spanish: string;
-    english: string;
-  };
+  first: { spanish: string; english: string };
+  second: { spanish: string; english: string };
   explanation?: string;
 }
 
@@ -45,6 +34,8 @@ interface ComparisonTopic {
   id: string;
   title: string;
   description: string;
+  tag: string;
+  color: string;
   examples: ComparisonPair[];
   practiceSentences: PracticeSentence[];
   isLoading: boolean;
@@ -54,785 +45,492 @@ interface ComparisonTopic {
   showResults: boolean;
 }
 
+const TOPIC_META: Record<string, { tag: string; color: string }> = {
+  pronouns:      { tag: 'Pronouns',    color: 'blue' },
+  tenses:        { tag: 'Past Tenses', color: 'amber' },
+  prepositions:  { tag: 'Prepositions',color: 'emerald' },
+  imperfectVerbs:{ tag: 'Imperfect',   color: 'rose' },
+  reflexiveVerbs:{ tag: 'Reflexives',  color: 'cyan' },
+  serEstar:      { tag: 'Ser / Estar', color: 'violet' },
+};
+
+const colorMap: Record<string, { badge: string; light: string; border: string; button: string; text: string; accent: string }> = {
+  blue:    { badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', light: 'bg-blue-50 dark:bg-blue-900/10', border: 'border-blue-200 dark:border-blue-800', button: 'bg-blue-600 hover:bg-blue-700', text: 'text-blue-700 dark:text-blue-300', accent: 'text-blue-500' },
+  amber:   { badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300', light: 'bg-amber-50 dark:bg-amber-900/10', border: 'border-amber-200 dark:border-amber-800', button: 'bg-amber-600 hover:bg-amber-700', text: 'text-amber-700 dark:text-amber-300', accent: 'text-amber-500' },
+  emerald: { badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300', light: 'bg-emerald-50 dark:bg-emerald-900/10', border: 'border-emerald-200 dark:border-emerald-800', button: 'bg-emerald-600 hover:bg-emerald-700', text: 'text-emerald-700 dark:text-emerald-300', accent: 'text-emerald-500' },
+  rose:    { badge: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300', light: 'bg-rose-50 dark:bg-rose-900/10', border: 'border-rose-200 dark:border-rose-800', button: 'bg-rose-600 hover:bg-rose-700', text: 'text-rose-700 dark:text-rose-300', accent: 'text-rose-500' },
+  cyan:    { badge: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300', light: 'bg-cyan-50 dark:bg-cyan-900/10', border: 'border-cyan-200 dark:border-cyan-800', button: 'bg-cyan-600 hover:bg-cyan-700', text: 'text-cyan-700 dark:text-cyan-300', accent: 'text-cyan-500' },
+  violet:  { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300', light: 'bg-violet-50 dark:bg-violet-900/10', border: 'border-violet-200 dark:border-violet-800', button: 'bg-violet-600 hover:bg-violet-700', text: 'text-violet-700 dark:text-violet-300', accent: 'text-violet-500' },
+};
+
+const INITIAL_TOPICS: ComparisonTopic[] = [
+  { id: 'pronouns',       title: 'Direct / Indirect Pronouns',     description: 'Compare sentences with and without pronouns',              ...TOPIC_META.pronouns,       examples: [], practiceSentences: [], isLoading: false, isPracticing: false, error: null, userAnswers: [], showResults: false },
+  { id: 'tenses',         title: 'Preterite vs Imperfect',         description: 'Compare past tense usage in different contexts',            ...TOPIC_META.tenses,         examples: [], practiceSentences: [], isLoading: false, isPracticing: false, error: null, userAnswers: [], showResults: false },
+  { id: 'prepositions',   title: 'Para vs Por',                    description: 'Compare the usage of para and por',                        ...TOPIC_META.prepositions,   examples: [], practiceSentences: [], isLoading: false, isPracticing: false, error: null, userAnswers: [], showResults: false },
+  { id: 'imperfectVerbs', title: 'Había / Estaba / Era / Tenía',   description: 'Master distinctions between key imperfect tense verbs',    ...TOPIC_META.imperfectVerbs, examples: [], practiceSentences: [], isLoading: false, isPracticing: false, error: null, userAnswers: [], showResults: false },
+  { id: 'reflexiveVerbs', title: 'Reflexive vs Non-Reflexive',     description: 'Practice distinguishing reflexive and non-reflexive forms', ...TOPIC_META.reflexiveVerbs, examples: [], practiceSentences: [], isLoading: false, isPracticing: false, error: null, userAnswers: [], showResults: false },
+  { id: 'serEstar',       title: 'Ser vs Estar',                   description: 'Master when to use ser or estar',                          ...TOPIC_META.serEstar,       examples: [], practiceSentences: [], isLoading: false, isPracticing: false, error: null, userAnswers: [], showResults: false },
+];
+
 export function ComparisonDrill() {
-  const [topics, setTopics] = useState<ComparisonTopic[]>([
-    {
-      id: 'pronouns',
-      title: 'Direct/Indirect Pronouns',
-      description: 'Compare sentences with and without pronouns',
-      examples: [],
-      practiceSentences: [],
-      isLoading: false,
-      isPracticing: false,
-      error: null,
-      userAnswers: [],
-      showResults: false,
-    },
-    {
-      id: 'tenses',
-      title: 'Preterite vs Imperfect',
-      description: 'Compare past tense usage in different contexts',
-      examples: [],
-      practiceSentences: [],
-      isLoading: false,
-      isPracticing: false,
-      error: null,
-      userAnswers: [],
-      showResults: false,
-    },
-    {
-      id: 'prepositions',
-      title: 'Para vs Por',
-      description: 'Compare the usage of para and por',
-      examples: [],
-      practiceSentences: [],
-      isLoading: false,
-      isPracticing: false,
-      error: null,
-      userAnswers: [],
-      showResults: false,
-    },
-    {
-      id: 'imperfectVerbs',
-      title: 'Había / Estaba / Era / Tenía',
-      description: 'Master the distinctions between key imperfect tense verbs',
-      examples: [],
-      practiceSentences: [],
-      isLoading: false,
-      isPracticing: false,
-      error: null,
-      userAnswers: [],
-      showResults: false,
-    },
-    {
-      id: 'reflexiveVerbs',
-      title: 'Reflexive vs Non-Reflexive Verbs',
-      description: 'Practice distinguishing between reflexive and non-reflexive forms',
-      examples: [],
-      practiceSentences: [],
-      isLoading: false,
-      isPracticing: false,
-      error: null,
-      userAnswers: [],
-      showResults: false,
-    },
-    {
-      id: 'serEstar',
-      title: 'Ser vs Estar',
-      description: 'Master when to use ser or estar',
-      examples: [],
-      practiceSentences: [],
-      isLoading: false,
-      isPracticing: false,
-      error: null,
-      userAnswers: [],
-      showResults: false,
-    },
-  ]);
+  const [topics, setTopics] = useState<ComparisonTopic[]>(INITIAL_TOPICS);
+  const [activeTopic, setActiveTopic] = useState<string>(INITIAL_TOPICS[0].id);
+
+  const currentTopic = topics.find(t => t.id === activeTopic)!;
+  const colors = colorMap[currentTopic.color];
 
   const generateExamples = async (topicId: string) => {
-    setTopics(prev => prev.map(topic => 
-      topic.id === topicId ? { ...topic, isLoading: true, error: null } : topic
-    ));
+    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, isLoading: true, error: null, isPracticing: false } : t));
 
     try {
-      // Get random words to include in examples
       const contextWords = getRandomWords(2);
-      const contextPrompt = `\n\nIMPORTANT: Include these words in your examples where appropriate: ${contextWords.join(', ')}. Create natural sentences using these words to show different contexts.`;
-
+      const contextPrompt = `\n\nIMPORTANT: Include these words in your examples where appropriate: ${contextWords.join(', ')}.`;
       let prompt = '';
+
       switch (topicId) {
         case 'pronouns':
-          prompt = `Generate 3 pairs of Spanish sentences demonstrating direct and indirect pronouns.
-          For each pair:
-          - First sentence should use the full noun/name
-          - Second sentence should replace it with the appropriate pronoun
-          - Include English translations
-          - Add a brief explanation of the pronoun usage
-          - Use natural, everyday Mexican Spanish vocabulary
-          ${contextPrompt}
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "first": {
-                "spanish": "Spanish sentence without pronouns",
-                "english": "English translation"
-              },
-              "second": {
-                "spanish": "Spanish sentence with pronouns",
-                "english": "English translation"
-              },
-              "explanation": "Brief explanation of the pronoun usage"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 3 pairs of Spanish sentences demonstrating direct and indirect pronouns. For each pair, first sentence uses full noun, second replaces with pronoun. Include English translations and a brief explanation. Use natural Mexican Spanish vocabulary.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"first":{"spanish":"...","english":"..."},"second":{"spanish":"...","english":"..."},"explanation":"..."}]`;
           break;
-
         case 'tenses':
-          prompt = `Generate 3 pairs of Spanish sentences comparing preterite and imperfect tenses.
-          For each pair:
-          - First sentence should use preterite
-          - Second sentence should use imperfect
-          - Use the same context but show different aspects
-          - Include English translations
-          - Add a brief explanation of why each tense is used
-          - Use natural, everyday Mexican Spanish vocabulary
-          ${contextPrompt}
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "first": {
-                "spanish": "Preterite sentence",
-                "english": "English translation"
-              },
-              "second": {
-                "spanish": "Imperfect sentence",
-                "english": "English translation"
-              },
-              "explanation": "Brief explanation of the tense usage"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 3 pairs of Spanish sentences comparing preterite and imperfect tenses. Same context but different aspects. Include English translations and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"first":{"spanish":"...","english":"..."},"second":{"spanish":"...","english":"..."},"explanation":"..."}]`;
           break;
-
         case 'prepositions':
-          prompt = `Generate 3 pairs of Spanish sentences comparing para and por.
-          For each pair:
-          - First sentence should use para
-          - Second sentence should use por
-          - Show clear contrast in meaning
-          - Include English translations
-          - Add a brief explanation of why each preposition is used
-          - Use natural, everyday Mexican Spanish vocabulary
-          ${contextPrompt}
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "first": {
-                "spanish": "Sentence with para",
-                "english": "English translation"
-              },
-              "second": {
-                "spanish": "Sentence with por",
-                "english": "English translation"
-              },
-              "explanation": "Brief explanation of the preposition usage"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 3 pairs of Spanish sentences comparing para and por with clear contrast in meaning. Include English translations and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"first":{"spanish":"...","english":"..."},"second":{"spanish":"...","english":"..."},"explanation":"..."}]`;
           break;
-
         case 'imperfectVerbs':
-          prompt = `Generate 3 pairs of Spanish sentences comparing había, estaba, era, and tenía.
-          For each pair:
-          - First sentence should use one of these verbs (había/estaba/era/tenía)
-          - Second sentence should use a different one, showing contrast
-          - Include English translations
-          - Add a brief explanation of when to use each verb
-          - Use natural, everyday Mexican Spanish vocabulary
-
-          Key distinctions to show:
-          - había = there was/were (existence/presence)
-          - estaba = was/were (location, temporary state)
-          - era = was/were (permanent characteristics, identity, time)
-          - tenía = had/used to have (possession, age)
-          ${contextPrompt}
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "first": {
-                "spanish": "Sentence with había/estaba/era/tenía",
-                "english": "English translation"
-              },
-              "second": {
-                "spanish": "Sentence with different verb",
-                "english": "English translation"
-              },
-              "explanation": "Brief explanation of why each verb is used"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 3 pairs of Spanish sentences comparing había, estaba, era, and tenía. había=there was/were, estaba=location/temporary state, era=permanent/identity/time, tenía=possession/age.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"first":{"spanish":"...","english":"..."},"second":{"spanish":"...","english":"..."},"explanation":"..."}]`;
           break;
-
         case 'reflexiveVerbs':
-          prompt = `Generate 3 pairs of Spanish sentences comparing reflexive and non-reflexive verb forms.
-          For each pair:
-          - First sentence should use the non-reflexive form
-          - Second sentence should use the reflexive form (with "se")
-          - Show clear contrast in meaning
-          - Include English translations
-          - Add a brief explanation of the difference
-          - Use natural, everyday Mexican Spanish vocabulary
-          - Mix different verb pairs from this list: caer/caerse, poner/ponerse, llevar/llevarse, sentir/sentirse, echar/echarse, parecer/parecerse, quedar/quedarse
-          - Use different tenses (present, preterite, imperfect, etc.)
-          ${contextPrompt}
-
-          Key concepts to demonstrate:
-          - caer (to fall) vs caerse (to fall down/over)
-          - poner (to put/place) vs ponerse (to put on/become)
-          - llevar (to carry/wear) vs llevarse (to take away/get along)
-          - sentir (to feel/regret) vs sentirse (to feel)
-          - echar (to throw/pour) vs echarse (to lie down)
-          - parecer (to seem) vs parecerse (to resemble)
-          - quedar (to remain/be left) vs quedarse (to stay)
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "first": {
-                "spanish": "Sentence without reflexive (e.g., Ella pone la mesa todos los días)",
-                "english": "English translation"
-              },
-              "second": {
-                "spanish": "Sentence with reflexive (e.g., Ella se pone el vestido rojo)",
-                "english": "English translation"
-              },
-              "explanation": "Brief explanation of the difference in meaning"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 3 pairs comparing reflexive and non-reflexive Spanish verbs (caer/caerse, poner/ponerse, llevar/llevarse, sentir/sentirse, echar/echarse, parecer/parecerse, quedar/quedarse). Use varied tenses.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"first":{"spanish":"...","english":"..."},"second":{"spanish":"...","english":"..."},"explanation":"..."}]`;
           break;
-
         case 'serEstar':
-          prompt = `Generate 3 pairs of Spanish sentences comparing ser and estar.
-          For each pair:
-          - First sentence should use ser
-          - Second sentence should use estar
-          - Show clear contrast in usage and meaning
-          - Include English translations
-          - Add a brief explanation of when to use each verb
-          - Use natural, everyday Mexican Spanish vocabulary
-          - Use different tenses (present, preterite, imperfect, etc.)
-          ${contextPrompt}
-
-          Key distinctions to demonstrate:
-          - ser: permanent characteristics, identity, origin, profession, time, dates
-          - estar: location, temporary states, emotions, ongoing actions (with gerund)
-          - Show how meaning changes with adjectives (e.g., ser listo vs estar listo)
-          - Include examples with both people and things
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "first": {
-                "spanish": "Sentence with ser (e.g., Mi hermano es muy alto)",
-                "english": "English translation"
-              },
-              "second": {
-                "spanish": "Sentence with estar (e.g., Mi hermano está cansado)",
-                "english": "English translation"
-              },
-              "explanation": "Brief explanation of why ser vs estar is used"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 3 pairs of Spanish sentences comparing ser and estar with clear contrasts (permanent vs temporary, professions, adjectives that change meaning). Use varied tenses.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"first":{"spanish":"...","english":"..."},"second":{"spanish":"...","english":"..."},"explanation":"..."}]`;
           break;
       }
 
-      const response = await generateText(prompt, {
-        model: 'gpt-3.5-turbo',
-        maxTokens: 1000,
-        temperature: 0.7,
-      });
-
+      const response = await generateText(prompt, { model: 'gpt-3.5-turbo', maxTokens: 1000, temperature: 0.7 });
       const examples = JSON.parse(response);
-
-      setTopics(prev => prev.map(topic => 
-        topic.id === topicId ? { ...topic, examples, isLoading: false, error: null } : topic
-      ));
+      setTopics(prev => prev.map(t => t.id === topicId ? { ...t, examples, isLoading: false } : t));
     } catch (err) {
-      console.error('Error generating examples:', err);
-      setTopics(prev => prev.map(topic => 
-        topic.id === topicId ? {
-          ...topic,
-          isLoading: false,
-          error: err instanceof Error ? err.message : 'Failed to generate examples'
-        } : topic
-      ));
+      setTopics(prev => prev.map(t => t.id === topicId ? { ...t, isLoading: false, error: err instanceof Error ? err.message : 'Failed to generate examples' } : t));
     }
   };
 
   const generatePractice = async (topicId: string) => {
-    setTopics(prev => prev.map(topic => 
-      topic.id === topicId ? {
-        ...topic,
-        isLoading: true,
-        error: null,
-        practiceSentences: [],
-        userAnswers: [],
-        showResults: false,
-        isPracticing: true
-      } : topic
-    ));
+    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, isLoading: true, error: null, practiceSentences: [], userAnswers: [], showResults: false, isPracticing: true } : t));
 
     try {
-      // Get random words to include in practice sentences
       const contextWords = getRandomWords(2);
-      const contextPrompt = `\n\nIMPORTANT: Include these words in your practice sentences where appropriate: ${contextWords.join(', ')}. Create natural sentences using these words to test understanding.`;
-
+      const contextPrompt = `\n\nIMPORTANT: Include these words where appropriate: ${contextWords.join(', ')}.`;
       let prompt = '';
+
       switch (topicId) {
         case 'pronouns':
-          prompt = `Generate 5 Spanish sentences for pronoun practice.
-          For each sentence:
-          - Create a sentence that requires a pronoun
-          - Replace the pronoun with _____
-          - Include the correct pronoun as the answer
-          - Provide clear context clues
-          - Include English translations
-          - Add brief explanations
-          ${contextPrompt}
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "spanish": "María dio el libro a Juan. _____ dio el libro.",
-              "english": "María gave the book to Juan. She gave him the book.",
-              "correctAnswer": "le",
-              "explanation": "Use 'le' as indirect object pronoun for 'to Juan'"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 5 Spanish sentences for pronoun practice. Replace the pronoun with _____. Include correct answer, English translation, and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"..._____ ...","english":"...","correctAnswer":"...","explanation":"..."}]`;
           break;
-
         case 'tenses':
-          prompt = `Generate 5 Spanish sentences for past tense practice.
-          For each sentence:
-          - Create a sentence that clearly requires either preterite or imperfect
-          - Replace the verb with _____
-          - Provide the correct form as the answer
-          - Include English translations
-          - Add brief explanations
-          ${contextPrompt}
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "spanish": "Mientras _____ por el parque, vi a Juan.",
-              "english": "While I was walking in the park, I saw Juan.",
-              "correctAnswer": "caminaba",
-              "options": ["caminaba", "caminó"],
-              "explanation": "Use imperfect for ongoing action interrupted by preterite"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 5 Spanish sentences for preterite vs imperfect practice. Replace verb with _____. Include correct conjugated form, options (2 choices), English translation, and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"..._____ ...","english":"...","correctAnswer":"...","options":["...","..."],"explanation":"..."}]`;
           break;
-
         case 'prepositions':
-          prompt = `Generate 5 Spanish sentences for por/para practice.
-          For each sentence:
-          - Create a sentence that clearly requires either por or para
-          - Replace the preposition with _____
-          - Provide the correct preposition as the answer
-          - Include English translations
-          - Add brief explanations
-          ${contextPrompt}
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "spanish": "Este regalo es _____ ti.",
-              "english": "This gift is for you.",
-              "correctAnswer": "para",
-              "options": ["por", "para"],
-              "explanation": "Use 'para' to indicate the recipient of something"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 5 Spanish sentences for por/para practice. Replace preposition with _____. Include options ["por","para"], English translation, and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"..._____ ...","english":"...","correctAnswer":"...","options":["por","para"],"explanation":"..."}]`;
           break;
-
         case 'imperfectVerbs':
-          prompt = `Generate 5 Spanish sentences for había/estaba/era/tenía practice.
-          For each sentence:
-          - Create a sentence that clearly requires one of these verbs
-          - Replace the verb with _____
-          - Provide the correct verb as the answer
-          - Include English translations
-          - Add brief explanations of why that specific verb is correct
-          ${contextPrompt}
-
-          Key distinctions:
-          - había = there was/were (existence/presence)
-          - estaba = was/were (location, temporary state, estar + gerund)
-          - era = was/were (permanent characteristics, identity, time, professions)
-          - tenía = had/used to have (possession, age, physical sensations)
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "spanish": "En el parque _____ muchos niños jugando.",
-              "english": "In the park there were many children playing.",
-              "correctAnswer": "había",
-              "options": ["había", "estaba", "era", "tenía"],
-              "explanation": "Use 'había' to express existence or presence ('there was/were')"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 5 Spanish sentences for había/estaba/era/tenía practice. Replace verb with _____. Include options ["había","estaba","era","tenía"], English translation, and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"..._____ ...","english":"...","correctAnswer":"...","options":["había","estaba","era","tenía"],"explanation":"..."}]`;
           break;
-
         case 'reflexiveVerbs':
-          prompt = `Generate 5 Spanish sentences for reflexive vs non-reflexive verb practice.
-          For each sentence:
-          - Create a sentence requiring either reflexive or non-reflexive form
-          - Replace the verb with _____
-          - Provide the correct verb form as the answer (with or without "se")
-          - Include English translations
-          - Add brief explanations of why reflexive or non-reflexive is correct
-          - Mix all seven verb pairs: caer/caerse, poner/ponerse, llevar/llevarse, sentir/sentirse, echar/echarse, parecer/parecerse, quedar/quedarse
-          - Use varied tenses (present, preterite, imperfect, future, etc.)
-          - Include different exercise types: some need reflexive, some need non-reflexive
-          ${contextPrompt}
-
-          Key distinctions:
-          - caer (to fall) vs caerse (to fall down/over - reflexive)
-          - poner (to put/place) vs ponerse (to put on/become - reflexive)
-          - llevar (to carry/wear) vs llevarse (to take away/get along - reflexive)
-          - sentir (to feel/regret) vs sentirse (to feel a certain way - reflexive)
-          - echar (to throw/pour) vs echarse (to lie down/throw oneself - reflexive)
-          - parecer (to seem/appear) vs parecerse (to resemble/look like - reflexive)
-          - quedar (to remain/be left) vs quedarse (to stay in a place - reflexive)
-
-          Important: Mix both reflexive and non-reflexive forms in the exercises. The options should include both forms with proper conjugation.
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "spanish": "María _____ el abrigo porque hace frío.",
-              "english": "María puts on her coat because it's cold.",
-              "correctAnswer": "se pone",
-              "options": ["pone", "se pone", "puso", "se puso"],
-              "explanation": "Use 'se pone' (reflexive) because she's putting the coat on herself"
-            },
-            {
-              "spanish": "Ella _____ los libros en la mesa.",
-              "english": "She puts the books on the table.",
-              "correctAnswer": "pone",
-              "options": ["pone", "se pone", "puso", "se puso"],
-              "explanation": "Use 'pone' (non-reflexive) because she's putting books on the table, not on herself"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 5 Spanish sentences for reflexive vs non-reflexive practice. Mix all 7 verb pairs. Replace verb with _____. Include 4 options (reflexive/non-reflexive in 2 tenses), English translation, and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"..._____ ...","english":"...","correctAnswer":"...","options":["...","...","...","..."],"explanation":"..."}]`;
           break;
-
         case 'serEstar':
-          prompt = `Generate 5 Spanish sentences for ser vs estar practice.
-          For each sentence:
-          - Create a sentence that clearly requires either ser or estar
-          - Replace the verb with _____
-          - Provide the correct conjugated form as the answer
-          - Include English translations
-          - Add brief explanations of why ser or estar is correct
-          - Use varied tenses (present, preterite, imperfect, future, etc.)
-          - Include different contexts: adjectives, locations, professions, emotions, ongoing actions
-          ${contextPrompt}
-
-          Key rules to demonstrate:
-          - ser: permanent characteristics, identity, origin, profession, material, time, dates, possession
-          - estar: location, temporary states, emotions, conditions, progressive tenses (with gerund)
-          - Adjectives that change meaning: ser listo (smart) vs estar listo (ready), ser aburrido (boring) vs estar aburrido (bored), ser bueno (good person) vs estar bueno (tasty/attractive)
-
-          Return the response as a JSON array with this format:
-          [
-            {
-              "spanish": "Mi hermana _____ doctora.",
-              "english": "My sister is a doctor.",
-              "correctAnswer": "es",
-              "options": ["es", "está", "era", "estaba"],
-              "explanation": "Use 'es' (ser) for professions and occupations"
-            },
-            {
-              "spanish": "La sopa _____ muy caliente.",
-              "english": "The soup is very hot.",
-              "correctAnswer": "está",
-              "options": ["es", "está", "era", "estaba"],
-              "explanation": "Use 'está' (estar) for temporary conditions like temperature"
-            }
-          ]
-
-          Return ONLY the JSON array, no other text.`;
+          prompt = `Generate 5 Spanish sentences for ser vs estar practice. Replace verb with _____. Include 4 options (es/está/era/estaba or similar conjugations), English translation, and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"..._____ ...","english":"...","correctAnswer":"...","options":["...","...","...","..."],"explanation":"..."}]`;
           break;
       }
 
-      const response = await generateText(prompt, {
-        model: 'gpt-3.5-turbo',
-        maxTokens: 1000,
-        temperature: 0.7,
-      });
-
+      const response = await generateText(prompt, { model: 'gpt-3.5-turbo', maxTokens: 1000, temperature: 0.7 });
       const practiceSentences = JSON.parse(response);
-
-      setTopics(prev => prev.map(topic => 
-        topic.id === topicId ? {
-          ...topic,
-          practiceSentences,
-          userAnswers: new Array(practiceSentences.length).fill(''),
-          isLoading: false,
-          error: null
-        } : topic
-      ));
+      setTopics(prev => prev.map(t => t.id === topicId ? { ...t, practiceSentences, userAnswers: new Array(practiceSentences.length).fill(''), isLoading: false } : t));
     } catch (err) {
-      setTopics(prev => prev.map(topic => 
-        topic.id === topicId ? {
-          ...topic,
-          isLoading: false,
-          error: err instanceof Error ? err.message : 'Failed to generate practice sentences'
-        } : topic
-      ));
+      setTopics(prev => prev.map(t => t.id === topicId ? { ...t, isLoading: false, error: err instanceof Error ? err.message : 'Failed to generate practice sentences' } : t));
     }
   };
 
   const handleAnswerChange = (topicId: string, index: number, value: string) => {
-    setTopics(prev => prev.map(topic =>
-      topic.id === topicId ? {
-        ...topic,
-        userAnswers: topic.userAnswers.map((ans, i) => i === index ? value : ans)
-      } : topic
-    ));
+    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, userAnswers: t.userAnswers.map((a, i) => i === index ? value : a) } : t));
   };
 
   const handleSubmit = (topicId: string) => {
-    setTopics(prev => prev.map(topic =>
-      topic.id === topicId ? { ...topic, showResults: true } : topic
-    ));
+    setTopics(prev => prev.map(t => t.id === topicId ? { ...t, showResults: true } : t));
   };
 
-  const handleTryAgain = (topicId: string) => {
-    generatePractice(topicId);
+  const getScore = (topic: ComparisonTopic) => {
+    return topic.practiceSentences.filter((s, i) =>
+      topic.userAnswers[i]?.toLowerCase() === s.correctAnswer.toLowerCase()
+    ).length;
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-        Comparison Drills
-      </h1>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+          Comparison Drills
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">
+          Study tricky Spanish grammar pairs side-by-side, then test yourself with interactive exercises.
+        </p>
+      </div>
 
-      <div className="space-y-8">
-        {topics.map((topic) => (
-          <div key={topic.id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+      {/* Topic selector */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+        {topics.map(topic => {
+          const c = colorMap[topic.color];
+          const isActive = activeTopic === topic.id;
+          return (
+            <button
+              key={topic.id}
+              onClick={() => setActiveTopic(topic.id)}
+              className={`text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                isActive
+                  ? `${c.light} ${c.border} shadow-sm`
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-2 ${c.badge}`}>
+                {topic.tag}
+              </span>
+              <p className={`text-sm font-semibold leading-tight ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                {topic.title}
+              </p>
+              {isActive && (
+                <ChevronRight className={`w-4 h-4 mt-1 ${c.accent}`} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active topic panel */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTopic}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
+          {/* Panel header */}
+          <div className={`px-6 py-5 border-b border-gray-100 dark:border-gray-700 ${colors.light}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {topic.title}
+                <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-2 ${colors.badge}`}>
+                  {currentTopic.tag}
+                </span>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {currentTopic.title}
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  {topic.description}
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  {currentTopic.description}
                 </p>
               </div>
-
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <button
-                  onClick={() => generateExamples(topic.id)}
-                  disabled={topic.isLoading}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    topic.isLoading
-                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  onClick={() => generateExamples(currentTopic.id)}
+                  disabled={currentTopic.isLoading}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-all ${
+                    currentTopic.isLoading ? 'opacity-50 cursor-not-allowed bg-gray-400' : `${colors.button}`
                   }`}
                 >
-                  {topic.isLoading ? (
-                    <>
-                      <RefreshCw className="inline-block w-4 h-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
+                  {currentTopic.isLoading && !currentTopic.isPracticing ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
-                    'Generate Examples'
+                    <BookOpen className="w-4 h-4" />
                   )}
+                  Examples
                 </button>
-
                 <button
-                  onClick={() => generatePractice(topic.id)}
-                  disabled={topic.isLoading}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    topic.isLoading
-                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-                      : 'bg-green-600 text-white hover:bg-green-700'
+                  onClick={() => generatePractice(currentTopic.id)}
+                  disabled={currentTopic.isLoading}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                    currentTopic.isLoading
+                      ? 'opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-700 text-gray-400'
+                      : `${colors.border} ${colors.text} bg-white dark:bg-gray-800 hover:${colors.light}`
                   }`}
                 >
+                  {currentTopic.isLoading && currentTopic.isPracticing ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Dumbbell className="w-4 h-4" />
+                  )}
                   Practice
                 </button>
               </div>
             </div>
+          </div>
 
-            {topic.error && (
-              <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <p className="text-red-600 dark:text-red-400 text-sm">{topic.error}</p>
-              </div>
-            )}
+          {/* Error */}
+          {currentTopic.error && (
+            <div className="mx-6 mt-5 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-start gap-3 text-red-700 dark:text-red-400">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <p className="text-sm">{currentTopic.error}</p>
+            </div>
+          )}
 
-            {!topic.isPracticing && topic.examples.length > 0 && (
-              <div className="space-y-6">
-                {topic.examples.map((pair, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="text-gray-900 dark:text-white font-medium">
-                              {pair.first.spanish}
-                            </p>
-                            <p className="text-indigo-600 dark:text-indigo-400 text-xs font-mono mt-1">
-                              {textToIPA(pair.first.spanish)}
-                            </p>
-                          </div>
+          {/* Loading state */}
+          {currentTopic.isLoading && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className={`w-10 h-10 rounded-full border-4 border-gray-200 dark:border-gray-700 animate-spin ${colors.border}`}
+                   style={{ borderTopColor: 'currentColor' }}
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {currentTopic.isPracticing ? 'Generating practice sentences...' : 'Generating examples...'}
+              </p>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!currentTopic.isLoading && !currentTopic.error && currentTopic.examples.length === 0 && currentTopic.practiceSentences.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center px-8">
+              <Sparkles className={`w-10 h-10 mb-3 ${colors.accent}`} />
+              <p className="text-gray-700 dark:text-gray-300 font-medium mb-1">Ready to learn</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Click <strong>Examples</strong> to see side-by-side comparisons, or jump straight into <strong>Practice</strong>.
+              </p>
+            </div>
+          )}
+
+          {/* Examples view */}
+          {!currentTopic.isLoading && !currentTopic.isPracticing && currentTopic.examples.length > 0 && (
+            <div className="p-6 space-y-5">
+              {currentTopic.examples.map((pair, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.08 }}
+                  className={`rounded-xl border ${colors.border} overflow-hidden`}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-gray-700">
+                    {/* First sentence */}
+                    <div className="p-5 space-y-3">
+                      <div className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${colors.badge}`}>
+                        A
+                      </div>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 dark:text-white font-medium leading-relaxed">
+                            {pair.first.spanish}
+                          </p>
+                          <p className="text-xs font-mono text-gray-400 dark:text-gray-500 mt-1 break-all">
+                            {textToIPA(pair.first.spanish)}
+                          </p>
+                        </div>
+                        <div className="shrink-0">
                           <SpanishAudioPlayer text={pair.first.spanish} />
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">
-                          {pair.first.english}
-                        </p>
                       </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                        {pair.first.english}
+                      </p>
+                    </div>
 
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="text-gray-900 dark:text-white font-medium">
-                              {pair.second.spanish}
-                            </p>
-                            <p className="text-indigo-600 dark:text-indigo-400 text-xs font-mono mt-1">
-                              {textToIPA(pair.second.spanish)}
-                            </p>
-                          </div>
+                    {/* Second sentence */}
+                    <div className={`p-5 space-y-3 ${colors.light}`}>
+                      <div className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${colors.badge}`}>
+                        B
+                      </div>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 dark:text-white font-medium leading-relaxed">
+                            {pair.second.spanish}
+                          </p>
+                          <p className="text-xs font-mono text-gray-400 dark:text-gray-500 mt-1 break-all">
+                            {textToIPA(pair.second.spanish)}
+                          </p>
+                        </div>
+                        <div className="shrink-0">
                           <SpanishAudioPlayer text={pair.second.spanish} />
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">
-                          {pair.second.english}
-                        </p>
                       </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                        {pair.second.english}
+                      </p>
                     </div>
+                  </div>
 
-                    {pair.explanation && (
-                      <p className="mt-4 text-sm text-indigo-600 dark:text-indigo-400 italic">
+                  {pair.explanation && (
+                    <div className="px-5 py-3 bg-gray-50 dark:bg-gray-900/30 border-t border-gray-100 dark:border-gray-700">
+                      <p className={`text-sm font-medium ${colors.text}`}>
                         {pair.explanation}
                       </p>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
 
-            {topic.isPracticing && topic.practiceSentences.length > 0 && (
-              <div className="space-y-6">
-                {topic.practiceSentences.map((sentence, index) => (
+          {/* Practice view */}
+          {!currentTopic.isLoading && currentTopic.isPracticing && currentTopic.practiceSentences.length > 0 && (
+            <div className="p-6 space-y-4">
+              {/* Score banner */}
+              {currentTopic.showResults && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={`p-4 rounded-xl flex items-center justify-between ${
+                    getScore(currentTopic) === currentTopic.practiceSentences.length
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
+                      : 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
+                  }`}
+                >
+                  <div>
+                    <p className={`font-semibold ${getScore(currentTopic) === currentTopic.practiceSentences.length ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                      {getScore(currentTopic) === currentTopic.practiceSentences.length ? '¡Perfecto!' : 'Keep practising!'}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {getScore(currentTopic)} / {currentTopic.practiceSentences.length} correct
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => generatePractice(currentTopic.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-all ${colors.button}`}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Try Again
+                  </button>
+                </motion.div>
+              )}
+
+              {currentTopic.practiceSentences.map((sentence, index) => {
+                const answered = currentTopic.showResults;
+                const isCorrect = answered && currentTopic.userAnswers[index]?.toLowerCase() === sentence.correctAnswer.toLowerCase();
+                const isWrong = answered && !isCorrect;
+
+                return (
                   <motion.div
                     key={index}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                    transition={{ delay: index * 0.06 }}
+                    className={`rounded-xl border p-5 transition-all ${
+                      answered
+                        ? isCorrect
+                          ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800'
+                          : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
+                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                    }`}
                   >
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex items-center gap-4">
-                          <p className="text-gray-900 dark:text-white flex-1">
-                            {sentence.spanish.split('_____')[0]}
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${colors.badge}`}>
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-3">
+                          <p className="text-gray-900 dark:text-white flex-1 leading-relaxed">
                             {sentence.options ? (
-                              <select
-                                value={topic.userAnswers[index]}
-                                onChange={(e) => handleAnswerChange(topic.id, index, e.target.value)}
-                                disabled={topic.showResults}
-                                className={`mx-1 px-2 py-1 rounded border text-gray-900 dark:text-white [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white ${
-                                  topic.showResults
-                                    ? topic.userAnswers[index].toLowerCase() === sentence.correctAnswer.toLowerCase()
-                                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                      : 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                                }`}
-                              >
-                                <option value="" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">Select...</option>
-                                {sentence.options.map((option) => (
-                                  <option key={option} value={option} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-                                    {option}
-                                  </option>
-                                ))}
-                              </select>
+                              <>
+                                {sentence.spanish.split('_____')[0]}
+                                <select
+                                  value={currentTopic.userAnswers[index]}
+                                  onChange={e => handleAnswerChange(currentTopic.id, index, e.target.value)}
+                                  disabled={answered}
+                                  className={`mx-1.5 px-2.5 py-1 rounded-lg border text-sm font-medium transition-all appearance-none cursor-pointer ${
+                                    answered
+                                      ? isCorrect
+                                        ? 'border-emerald-400 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                        : 'border-red-400 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                      : `${colors.border} bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2`
+                                  }`}
+                                >
+                                  <option value="">Choose...</option>
+                                  {sentence.options.map(opt => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                  ))}
+                                </select>
+                                {sentence.spanish.split('_____')[1]}
+                              </>
                             ) : (
-                              <input
-                                type="text"
-                                value={topic.userAnswers[index]}
-                                onChange={(e) => handleAnswerChange(topic.id, index, e.target.value)}
-                                disabled={topic.showResults}
-                                className={`w-24 px-2 py-1 mx-1 rounded border ${
-                                  topic.showResults
-                                    ? topic.userAnswers[index].toLowerCase() === sentence.correctAnswer.toLowerCase()
-                                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                      : 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                                }`}
-                              />
+                              <>
+                                {sentence.spanish.split('_____')[0]}
+                                <input
+                                  type="text"
+                                  value={currentTopic.userAnswers[index]}
+                                  onChange={e => handleAnswerChange(currentTopic.id, index, e.target.value)}
+                                  disabled={answered}
+                                  placeholder="..."
+                                  className={`inline-block w-24 mx-1.5 px-2 py-1 rounded-lg border text-sm font-medium transition-all text-center ${
+                                    answered
+                                      ? isCorrect
+                                        ? 'border-emerald-400 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                        : 'border-red-400 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                      : `${colors.border} bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2`
+                                  }`}
+                                />
+                                {sentence.spanish.split('_____')[1]}
+                              </>
                             )}
-                            {sentence.spanish.split('_____')[1]}
                           </p>
-                          <SpanishAudioPlayer text={sentence.spanish} />
+                          <div className="shrink-0">
+                            <SpanishAudioPlayer text={sentence.spanish.replace('_____', currentTopic.userAnswers[index] || '...')} />
+                          </div>
                         </div>
-                        <p className="text-indigo-600 dark:text-indigo-400 text-xs font-mono mt-1">
-                          {textToIPA(sentence.spanish.replace('_____', topic.userAnswers[index] || '...'))}
+                        <p className="text-xs font-mono text-gray-400 dark:text-gray-500 mt-1">
+                          {textToIPA(sentence.spanish.replace('_____', currentTopic.userAnswers[index] || '...'))}
                         </p>
                       </div>
-
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {sentence.english}
-                      </p>
-
-                      {topic.showResults && (
-                        <div className="mt-2">
-                          {topic.userAnswers[index].toLowerCase() === sentence.correctAnswer.toLowerCase() ? (
-                            <p className="text-green-600 dark:text-green-400 text-sm">
-                              ¡Correcto! ✓
-                            </p>
-                          ) : (
-                            <p className="text-red-600 dark:text-red-400 text-sm">
-                              The correct answer is: <strong>{sentence.correctAnswer}</strong>
-                            </p>
-                          )}
-                          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                            {sentence.explanation}
-                          </p>
-                        </div>
-                      )}
                     </div>
-                  </motion.div>
-                ))}
 
-                {!topic.showResults ? (
-                  <button
-                    onClick={() => handleSubmit(topic.id)}
-                    className="w-full mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Check Answers
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleTryAgain(topic.id)}
-                    className="w-full mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Try New Sentences
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 italic ml-9 mb-3">
+                      {sentence.english}
+                    </p>
+
+                    {answered && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="ml-9 space-y-1"
+                      >
+                        <div className="flex items-center gap-2">
+                          {isCorrect ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Correct!</p>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                              <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                                Correct answer: <span className="font-bold">{sentence.correctAnswer}</span>
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {sentence.explanation}
+                        </p>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                );
+              })}
+
+              {!currentTopic.showResults && (
+                <button
+                  onClick={() => handleSubmit(currentTopic.id)}
+                  disabled={currentTopic.userAnswers.some(a => !a)}
+                  className={`w-full mt-2 py-3 rounded-xl text-sm font-semibold text-white transition-all ${
+                    currentTopic.userAnswers.some(a => !a)
+                      ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500'
+                      : `${colors.button} shadow-sm hover:shadow`
+                  }`}
+                >
+                  Check Answers
+                </button>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
