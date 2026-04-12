@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Mic, StopCircle, X, Loader2, Volume2 } from 'lucide-react';
 import RecordRTC from 'recordrtc';
 import { generateText, transcribeAudio } from '../utils/openai';
+import { containsProfanity, PROFANITY_ERROR_MESSAGE } from '../utils/profanityFilter';
 
 interface SpeakingPracticeProps {
   isOpen: boolean;
@@ -129,6 +130,12 @@ export function SpeakingPractice({ isOpen, onClose }: SpeakingPracticeProps) {
         try {
           // First, get the transcription from Whisper API
           const transcribedText = await transcribeAudio(blob);
+
+          if (containsProfanity(transcribedText)) {
+            setError(PROFANITY_ERROR_MESSAGE);
+            setIsProcessing(false);
+            return;
+          }
 
           // Then, get feedback on the transcribed text
           const prompt = `Analyze this Spanish speech and provide feedback with example sentences:

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X, RefreshCw } from 'lucide-react';
 import { generateText } from '../utils/openai';
+import { containsProfanity, PROFANITY_ERROR_MESSAGE } from '../utils/profanityFilter';
 
 interface SpanishCorrectionProps {
   isOpen: boolean;
@@ -17,6 +18,11 @@ export function SpanishCorrection({ isOpen, onClose }: SpanishCorrectionProps) {
   const handleSubmit = async () => {
     if (!inputText.trim()) {
       setError('Please enter some text to correct');
+      return;
+    }
+
+    if (containsProfanity(inputText)) {
+      setError(PROFANITY_ERROR_MESSAGE);
       return;
     }
 

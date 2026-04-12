@@ -3,6 +3,7 @@ import { Volume2, Mic, StopCircle, RefreshCw, VolumeX, Play, Pause, Loader2 } fr
 import RecordRTC from 'recordrtc';
 import { generateText } from '../utils/openai';
 import { generateSpeech, isElevenLabsAvailable, getDefaultSpanishVoices } from '../utils/elevenLabs';
+import { containsProfanity, PROFANITY_ERROR_MESSAGE } from '../utils/profanityFilter';
 
 interface SpanishCorrectionModalProps {
   isOpen: boolean;
@@ -29,6 +30,11 @@ export function SpanishCorrectionModal({ isOpen, onClose }: SpanishCorrectionMod
   const handleSubmit = async () => {
     if (!inputText.trim()) {
       setError('Please enter some text to correct');
+      return;
+    }
+
+    if (containsProfanity(inputText)) {
+      setError(PROFANITY_ERROR_MESSAGE);
       return;
     }
 

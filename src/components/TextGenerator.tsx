@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { SUBJECTS } from '../types/text';
 import { CEFR_LEVELS } from '../types/level';
 import { useTextStore } from '../store/useTextStore';
+import { containsProfanity, PROFANITY_ERROR_MESSAGE } from '../utils/profanityFilter';
 import { SpanishAudioPlayer } from './SpanishAudioPlayer';
 import { TextStats } from './TextStats';
 import { AnalyzedText } from './AnalyzedText';
@@ -43,6 +44,12 @@ export function TextGenerator() {
 
   const handleGenerate = async () => {
     if (!selectedSubject || (selectedSubject === 'Custom' && !customTopic.trim())) {
+      return;
+    }
+
+    if (selectedSubject === 'Custom' && containsProfanity(customTopic)) {
+      clearError();
+      useTextStore.setState({ error: PROFANITY_ERROR_MESSAGE });
       return;
     }
 

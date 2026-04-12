@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useWordStore } from '../store/useWordStore';
 import { CEFRLevel } from '../types/level';
 import { spanishAnalyzer } from '../utils/nlp';
+import { containsProfanity, PROFANITY_ERROR_MESSAGE } from '../utils/profanityFilter';
 import { TextStats } from './TextStats';
 import { AnalyzedText } from './AnalyzedText';
 
@@ -26,6 +27,11 @@ export function TextAnalysis({ level, showTranslation }: TextAnalysisProps) {
   const handleAnalyze = async () => {
     if (!inputText.trim()) {
       setError('Please enter some text to analyze');
+      return;
+    }
+
+    if (containsProfanity(inputText)) {
+      setError(PROFANITY_ERROR_MESSAGE);
       return;
     }
 
