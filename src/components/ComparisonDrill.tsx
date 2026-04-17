@@ -28,6 +28,7 @@ interface PracticeSentence {
   correctAnswer: string;
   explanation: string;
   options?: string[];
+  formExplanation?: string;
 }
 
 interface ComparisonTopic {
@@ -138,7 +139,7 @@ export function ComparisonDrill() {
           prompt = `Generate 5 Spanish sentences for había/estaba/era/tenía practice. Replace verb with _____. Include options ["había","estaba","era","tenía"], English translation, and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"..._____ ...","english":"...","correctAnswer":"...","options":["había","estaba","era","tenía"],"explanation":"..."}]`;
           break;
         case 'reflexiveVerbs':
-          prompt = `Generate 5 Spanish fill-in-the-blank sentences to practice reflexive vs non-reflexive verbs. Use these verb pairs: lavar/lavarse, poner/ponerse, llevar/llevarse, sentir/sentirse, echar/echarse, parecer/parecerse, quedar/quedarse. Replace the verb with _____. For each sentence provide 4 options which must be ACTUAL conjugated Spanish verb forms (e.g. "lava", "se lava", "lavaba", "se lavaba") — never use English labels or descriptions. The correctAnswer must exactly match one of the 4 options.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"_____ los dientes cada noche.","english":"...","correctAnswer":"Me lavo","options":["Me lavo","Lavo","Me lavé","Lavé"],"explanation":"..."}]`;
+          prompt = `Generate 5 Spanish fill-in-the-blank sentences to practice reflexive vs non-reflexive verbs. Use these verb pairs: lavar/lavarse, poner/ponerse, llevar/llevarse, sentir/sentirse, echar/echarse, parecer/parecerse, quedar/quedarse. Replace the verb with _____. For each sentence provide 4 options which must be ACTUAL conjugated Spanish verb forms (e.g. "lava", "se lava", "lavaba", "se lavaba") — never use English labels or descriptions. The correctAnswer must exactly match one of the 4 options. Also include a "formExplanation" field (1-2 sentences) that explains the grammar rule behind why the correct form (reflexive or non-reflexive) is used in this specific sentence.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"_____ los dientes cada noche.","english":"...","correctAnswer":"Me lavo","options":["Me lavo","Lavo","Me lavé","Lavé"],"explanation":"...","formExplanation":"'Lavarse' is used here because the subject is performing the action on themselves (brushing their own teeth). The reflexive pronoun 'me' signals this self-directed action."}]`;
           break;
         case 'serEstar':
           prompt = `Generate 5 Spanish sentences for ser vs estar practice. Replace verb with _____. Include 4 options (es/está/era/estaba or similar conjugations), English translation, and brief explanation.${contextPrompt}\n\nReturn ONLY a JSON array:\n[{"spanish":"..._____ ...","english":"...","correctAnswer":"...","options":["...","...","...","..."],"explanation":"..."}]`;
@@ -488,7 +489,7 @@ export function ComparisonDrill() {
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="ml-9 space-y-1"
+                        className="ml-9 space-y-2"
                       >
                         <div className="flex items-center gap-2">
                           {isCorrect ? (
@@ -508,6 +509,16 @@ export function ComparisonDrill() {
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {sentence.explanation}
                         </p>
+                        {currentTopic.id === 'reflexiveVerbs' && sentence.formExplanation && (
+                          <div className="mt-1 px-3 py-2 rounded-lg bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800">
+                            <p className="text-xs font-semibold text-cyan-700 dark:text-cyan-400 mb-0.5 uppercase tracking-wide">
+                              Why this form?
+                            </p>
+                            <p className="text-sm text-cyan-800 dark:text-cyan-300">
+                              {sentence.formExplanation}
+                            </p>
+                          </div>
+                        )}
                       </motion.div>
                     )}
                   </motion.div>
